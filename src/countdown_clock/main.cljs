@@ -36,7 +36,7 @@
 (defn set-interval [db]
   (-> db
       (stop-interval)
-      (assoc :interval-timer (js/setInterval #(rf/dispatch [:tick]) 1000))))
+      (assoc :interval-timer (js/setInterval #(rf/dispatch [:tick]) 200))))
 
 (rf/reg-event-db
  :start
@@ -69,14 +69,15 @@
 (defn clock []
   (let [duration       @(rf/subscribe [:get :duration])
         passed-time    @(rf/subscribe [:get :passed-time])
+        time-left      (- duration passed-time)
         progress       (min 1.0 (/ passed-time duration))
         color          (condp < progress
                          0.98 "#d22"
                          0.9  "#e62e73"
                          0.5  "#fba842"
                          "#fbd872")
-        mins           (int (/ passed-time 60))
-        secs           (int (mod passed-time 60))
+        mins           (int (/ (Math/abs time-left) 60))
+        secs           (int (rem (Math/abs time-left) 60))
         radius         49
         angle          (* 359.9999 progress)
         arc-x          (* radius (Math/cos (* (- angle 90) (/ Math/PI 180.0))))
@@ -99,7 +100,7 @@
                :text-anchor "middle"
                :style       {:fill      "#84d7cf"
                              :font-size 25}}
-        (format "%d:%02d" mins secs)])]))
+        (str (when (neg? time-left) "-") (format "%d:%02d" mins secs))])]))
 
 (defn app []
   (fn []
