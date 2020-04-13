@@ -41,14 +41,6 @@
       (assoc :interval-timer (js/setInterval #(rf/dispatch [:tick]) granularity))))
 
 (rf/reg-event-db
- :start
- (fn [db _]
-   (-> db
-       (assoc :running? true)
-       (assoc :passed-time 0)
-       (set-interval))))
-
-(rf/reg-event-db
  :resume
  (fn [db _]
    (-> db
@@ -56,10 +48,18 @@
        (set-interval))))
 
 (rf/reg-event-db
- :stop
+ :pause
  (fn [db _]
    (-> db
        (assoc :running? false)
+       (stop-interval))))
+
+(rf/reg-event-db
+ :reset
+ (fn [db _]
+   (-> db
+       (assoc :running? false)
+       (assoc :passed-time 0)
        (stop-interval))))
 
 (rf/reg-event-db
@@ -127,9 +127,9 @@
      {:style {:width "100%"}}
      [:div
       "duration" [integer-field :duration]
-      [:button {:on-click #(rf/dispatch [:start])} "start"]
       [:button {:on-click #(rf/dispatch [:resume])} "resume"]
-      [:button {:on-click #(rf/dispatch [:stop])} "stop"]]
+      [:button {:on-click #(rf/dispatch [:pause])} "pause"]
+      [:button {:on-click #(rf/dispatch [:reset])} "reset"]]
      [:svg {:style               {:width  "100%"
                                   :height "90vh"}
             :viewBox             "0 0 100 100"
