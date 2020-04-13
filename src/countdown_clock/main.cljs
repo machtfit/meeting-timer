@@ -17,6 +17,8 @@
 
                                         ; events
 
+(defonce granularity 200)
+
 (rf/reg-event-db
  :initialize-db
  (fn [db _]
@@ -36,7 +38,7 @@
 (defn set-interval [db]
   (-> db
       (stop-interval)
-      (assoc :interval-timer (js/setInterval #(rf/dispatch [:tick]) 200))))
+      (assoc :interval-timer (js/setInterval #(rf/dispatch [:tick]) granularity))))
 
 (rf/reg-event-db
  :start
@@ -44,7 +46,13 @@
    (-> db
        (assoc :running? true)
        (assoc :passed-time 0)
-       (assoc :start-time (timestamp))
+       (set-interval))))
+
+(rf/reg-event-db
+ :resume
+ (fn [db _]
+   (-> db
+       (assoc :running? true)
        (set-interval))))
 
 (rf/reg-event-db
@@ -57,8 +65,17 @@
 (rf/reg-event-db
  :tick
  (fn [db _]
-   (assoc db :passed-time (- (timestamp) (:start-time db)))))
+   (update db :passed-time + (/ granularity 1000.0))))
+
                                         ; views
+(defonce aquafit-blue "#008ca0")
+(defonce machtfit-green "#34b78f")
+(defonce sonnengruss-yellow "fbd872")
+(defonce raspberrysmoothie-pink "e62e73")
+(defonce night-black "#122020")
+(defonce zen-white "#ffffff")
+
+(defonce alarm-red "#d22")
 
 (defn integer-field [key]
   [:input {:type      "input"
@@ -69,15 +86,15 @@
 (defn clock []
   (let [duration       @(rf/subscribe [:get :duration])
         passed-time    @(rf/subscribe [:get :passed-time])
-        time-left      (- duration passed-time)
+        remaining-time (- duration passed-time)
         progress       (min 1.0 (/ passed-time duration))
         color          (condp < progress
-                         0.98 "#d22"
-                         0.9  "#e62e73"
-                         0.5  "#fba842"
-                         "#fbd872")
-        mins           (int (/ (Math/abs time-left) 60))
-        secs           (int (rem (Math/abs time-left) 60))
+                         0.98 alarm-red
+                         0.9  raspberrysmoothie-pink
+                         0.5  sonnengruss-yellow
+                         machtfit-green)
+        mins           (int (/ (Math/abs remaining-time) 60))
+        secs           (int (rem (Math/abs remaining-time) 60))
         radius         49
         angle          (* 359.9999 progress)
         arc-x          (* radius (Math/cos (* (- angle 90) (/ Math/PI 180.0))))
@@ -89,7 +106,7 @@
                :r     radius
                :style {:stroke       "none"
                        :stroke-width 0.2
-                       :fill         "#34b78f"}}]
+                       :fill         aquafit-blue}}]
      (when passed-time
        [:path {:d     (s/join " " (map str ["M" 0 (- radius) "A" radius radius 0 large-arc-flag 1 arc-x arc-y "L" 0 0 "Z"]))
                :style {:stroke-width 0.2
@@ -98,9 +115,11 @@
      (when passed-time
        [:text {:y           6
                :text-anchor "middle"
-               :style       {:fill      "#84d7cf"
-                             :font-size 25}}
-        (str (when (neg? time-left) "-") (format "%d:%02d" mins secs))])]))
+               :style       {:fill         zen-white
+                             :stroke       night-black
+                             :stroke-width 0.25
+                             :font-size    25}}
+        (str (when (neg? remaining-time) "-") (format "%d:%02d" mins secs))])]))
 
 (defn app []
   (fn []
@@ -109,6 +128,7 @@
      [:div
       "duration" [integer-field :duration]
       [:button {:on-click #(rf/dispatch [:start])} "start"]
+      [:button {:on-click #(rf/dispatch [:resume])} "resume"]
       [:button {:on-click #(rf/dispatch [:stop])} "stop"]]
      [:svg {:style               {:width  "100%"
                                   :height "90vh"}
