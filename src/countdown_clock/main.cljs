@@ -84,42 +84,42 @@
 
 
 (defn clock []
-  (let [duration       @(rf/subscribe [:get :duration])
-        passed-time    @(rf/subscribe [:get :passed-time])
-        remaining-time (- duration passed-time)
-        progress       (min 1.0 (/ passed-time duration))
-        color          (condp < progress
-                         0.98 alarm-red
-                         0.9  raspberrysmoothie-pink
-                         0.5  sonnengruss-yellow
-                         machtfit-green)
-        mins           (int (/ (Math/abs remaining-time) 60))
-        secs           (int (rem (Math/abs remaining-time) 60))
-        radius         49
-        angle          (* 359.9999 progress)
-        arc-x          (* radius (Math/cos (* (- angle 90) (/ Math/PI 180.0))))
-        arc-y          (* radius (Math/sin (* (- angle 90) (/ Math/PI 180.0))))
-        large-arc-flag (if (> angle 180) 1 0)]
+  (let [duration        @(rf/subscribe [:get :duration])
+        passed-time     @(rf/subscribe [:get :passed-time])
+        remaining-time  (- duration passed-time)
+        progress        (min 1.0 (/ passed-time duration))
+        color           (condp < progress
+                          0.98 alarm-red
+                          0.9  raspberrysmoothie-pink
+                          0.5  sonnengruss-yellow
+                          machtfit-green)
+        mins            (int (/ (Math/abs remaining-time) 60))
+        secs            (int (rem (Math/abs remaining-time) 60))
+        passed-time-str (when passed-time
+                          (str (when (neg? remaining-time) "-") (format "%d:%02d" mins secs)))
+        radius          49
+        angle           (* 359.9999 progress)
+        arc-x           (* radius (Math/cos (* (- angle 90) (/ Math/PI 180.0))))
+        arc-y           (* radius (Math/sin (* (- angle 90) (/ Math/PI 180.0))))
+        large-arc-flag  (if (> angle 180) 1 0)]
     [:g {:transform "translate(50, 50)"}
      [:circle {:cx    0
                :cy    0
                :r     radius
-               :style {:stroke       "none"
-                       :stroke-width 0.2
-                       :fill         aquafit-blue}}]
+               :style {:stroke "none"
+                       :fill   aquafit-blue}}]
      (when passed-time
        [:path {:d     (s/join " " (map str ["M" 0 (- radius) "A" radius radius 0 large-arc-flag 1 arc-x arc-y "L" 0 0 "Z"]))
-               :style {:stroke-width 0.2
-                       :stroke       "none"
-                       :fill         color}}])
+               :style {:stroke "none"
+                       :fill   color}}])
      (when passed-time
-       [:text {:y           6
-               :text-anchor "middle"
-               :style       {:fill         zen-white
-                             :stroke       night-black
-                             :stroke-width 0.25
-                             :font-size    25}}
-        (str (when (neg? remaining-time) "-") (format "%d:%02d" mins secs))])]))
+       [:text {:x           (- (* 6.5 (count passed-time-str)))
+               :y           6
+               :text-anchor "start"
+               :style       {:fill      zen-white
+                             :stroke    "none"
+                             :font-size 25}}
+        passed-time-str])]))
 
 (defn app []
   (fn []
