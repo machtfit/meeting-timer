@@ -1,4 +1,12 @@
+@font-face {
+  font-family: 'Cera';
+  font-style: normal;
+  font-weight: normal;
+  src: url('../font/cera.otf') format('opentype');
+}
+
 body {
     background-color: #fff;
     color: #122020;
+    font-family: 'Cera', sans-serif;
 }
