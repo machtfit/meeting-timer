@@ -110,8 +110,9 @@
                        :fill   aquafit-blue}}]
      (when passed-time
        [:path {:d     (s/join " " (map str ["M" 0 (- radius) "A" radius radius 0 large-arc-flag 1 arc-x arc-y "L" 0 0 "Z"]))
-               :style {:stroke "none"
-                       :fill   color}}])
+               :style {:stroke     "none"
+                       :fill       color
+                       :transition "fill 1s"}}])
      (when passed-time
        [:text {:x           (- (* 6.5 (count passed-time-str)))
                :y           6
