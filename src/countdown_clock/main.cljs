@@ -17,7 +17,7 @@
 
                                         ; events
 
-(defonce granularity 200)
+(def granularity 30)
 
 (rf/reg-event-db
  :initialize-db
