@@ -99,8 +99,9 @@
                           (str (when (neg? remaining-time) "-") (format "%d:%02d" mins secs)))
         radius          49
         angle           (* 359.9999 progress)
-        arc-x           (* radius (Math/cos (* (- angle 90) (/ Math/PI 180.0))))
-        arc-y           (* radius (Math/sin (* (- angle 90) (/ Math/PI 180.0))))
+        angle-rad       (* (- angle 90) (/ Math/PI 180.0))
+        arc-x           (* radius (Math/cos angle-rad))
+        arc-y           (* radius (Math/sin angle-rad))
         large-arc-flag  (if (> angle 180) 1 0)]
     [:g {:transform "translate(50, 50)"}
      [:circle {:cx    0
