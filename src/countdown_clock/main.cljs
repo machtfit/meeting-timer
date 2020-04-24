@@ -1,9 +1,8 @@
 (ns countdown-clock.main
-  (:require [re-frame.core :as rf]
-            [reagent.core :as r]
-            [goog.string.format]
-            [goog.string :refer (format)]
-            [clojure.string :as s]))
+  (:require [clojure.string :as s]
+            [goog.string :refer [format]]
+            [re-frame.core :as rf]
+            [reagent.core :as r]))
 
 (defn timestamp []
   (/ (.getTime (js/Date.)) 1000.0))
