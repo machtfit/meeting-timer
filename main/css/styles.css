@@ -10,3 +10,71 @@ body {
     color: #122020;
     font-family: 'Cera', sans-serif;
 }
+
+.buttons {
+  display: block;
+  position: absolute;
+  right: 1em;
+  top: 1em;
+}
+
+.no-select {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Opera and Firefox */
+}
+
+.button {
+  display: inline-block;
+  text-align: center;
+  transition: background-color 0.6s;
+  cursor: pointer;
+  font-size: 3em;
+  color: #ffffff;
+  background-color: #34b78f;
+}
+
+.button:hover {
+  background-color: #008ca0;
+}
+
+.adder {
+  margin-bottom: 0.5em;
+}
+
+.adder div {
+  display: inline-block;
+  transition: background-color 0.6s;
+}
+
+.adder .minus {
+  width: 0.8em;
+  border-left: 3px solid #14976f;
+  border-top: 3px solid #14976f;
+  border-bottom: 3px solid #14976f;
+  border-radius: 0.3em 0 0 0.3em;
+}
+
+.adder .text {
+  width: 1.8em;
+  border-top: 3px solid #14976f;
+  border-bottom: 3px solid #14976f;
+}
+
+.adder .plus {
+  width: 0.8em;
+  border-right: 3px solid #14976f;
+  border-top: 3px solid #14976f;
+  border-bottom: 3px solid #14976f;
+  border-radius: 0 0.3em 0.3em 0;
+}
+
+.reset {
+  width: 3.4em;
+  border: 3px solid #14976f;
+  border-radius: 0.3em;
+}

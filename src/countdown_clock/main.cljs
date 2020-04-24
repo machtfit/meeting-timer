@@ -29,6 +29,11 @@
  (fn [db [_ key value]]
    (assoc db key value)))
 
+(rf/reg-event-db
+ :add-to-total-duration
+ (fn [db [_ value]]
+   (update db :duration #(max 0 (+ % value)))))
+
 (defn stop-interval [db]
   (let [previous-timer (:interval-timer db)]
     (when previous-timer (js/clearInterval previous-timer))
@@ -55,6 +60,14 @@
        (stop-interval))))
 
 (rf/reg-event-db
+ :toggle
+ (fn [db _]
+   (if (:running? db)
+     (rf/dispatch [:pause])
+     (rf/dispatch [:resume]))
+   db))
+
+(rf/reg-event-db
  :reset
  (fn [db _]
    (-> db
@@ -77,8 +90,8 @@
                                         ; views
 (defonce aquafit-blue "#008ca0")
 (defonce machtfit-green "#34b78f")
-(defonce sonnengruss-yellow "fbd872")
-(defonce raspberrysmoothie-pink "e62e73")
+(defonce sonnengruss-yellow "#fbd872")
+(defonce raspberrysmoothie-pink "#e62e73")
 (defonce night-black "#122020")
 (defonce zen-white "#ffffff")
 
@@ -91,26 +104,28 @@
 
 
 (defn clock []
-  (let [duration        @(rf/subscribe [:get :duration])
-        passed-time     @(rf/subscribe [:get :passed-time])
-        remaining-time  (- duration passed-time)
-        progress        (min 1.0 (/ passed-time duration))
-        color           (condp < progress
-                          0.98 alarm-red
-                          0.9  raspberrysmoothie-pink
-                          0.5  sonnengruss-yellow
-                          machtfit-green)
-        mins            (int (/ (Math/abs remaining-time) 60))
-        secs            (int (rem (Math/abs remaining-time) 60))
+  (let [duration           @(rf/subscribe [:get :duration])
+        passed-time        @(rf/subscribe [:get :passed-time])
+        remaining-time     (- duration passed-time)
+        progress           (min 1.0 (if (zero? duration) 1.0 (/ passed-time duration)))
+        color              (condp < progress
+                             0.98 alarm-red
+                             0.9  raspberrysmoothie-pink
+                             0.5  sonnengruss-yellow
+                             machtfit-green)
+        mins               (int (/ (Math/abs remaining-time) 60))
+        secs               (int (rem (Math/abs remaining-time) 60))
         remaining-time-str (when remaining-time
-                          (str (when (neg? remaining-time) "-") (format "%d:%02d" mins secs)))
-        radius          49
-        angle           (* 359.9999 progress)
-        angle-rad       (* (- angle 90) (/ Math/PI 180.0))
-        arc-x           (* radius (Math/cos angle-rad))
-        arc-y           (* radius (Math/sin angle-rad))
-        large-arc-flag  (if (> angle 180) 1 0)]
-    [:g {:transform "translate(50, 50)"}
+                             (str (when (neg? remaining-time) "-") (format "%d:%02d" mins secs)))
+        radius             49
+        angle              (* 359.9999 progress)
+        angle-rad          (* (- angle 90) (/ Math/PI 180.0))
+        arc-x              (* radius (Math/cos angle-rad))
+        arc-y              (* radius (Math/sin angle-rad))
+        large-arc-flag     (if (> angle 180) 1 0)]
+    [:g.no-select {:transform "translate(50, 50)"
+                   :on-click  #(rf/dispatch [:toggle])
+                   :style     {:cursor "pointer"}}
      [:circle {:cx    0
                :cy    0
                :r     radius
@@ -130,20 +145,47 @@
                              :font-size 25}}
         remaining-time-str])]))
 
+(defn adder-button [text duration]
+  [:div.adder
+   [:div.button.minus.no-select
+    {:on-click #(rf/dispatch [:add-to-total-duration (- duration)])}
+    "-"]
+   [:div.button.text.no-select
+    {:on-click #(rf/dispatch [:set :duration duration])}
+    text]
+   [:div.button.plus.no-select
+    {:on-click #(rf/dispatch [:add-to-total-duration duration])}
+    "+"]])
+
+(defn reset-button []
+  [:div.button.reset.no-select
+   {:on-click #(rf/dispatch [:reset])}
+   "⟳"])
+
+(defn key-id [event]
+  (keyword (.-code event)))
+
+(defn on-key-press [event]
+  (let [key-id (key-id event)]
+    (when (= key-id :Space)
+      (rf/dispatch [:toggle]))))
+
 (defn app []
+  (set! (.-onkeypress js/window) on-key-press)
   (fn []
     [:div
      {:style {:width "100%"}}
-     [:div
-      "duration" [integer-field :duration]
-      [:button {:on-click #(rf/dispatch [:resume])} "resume"]
-      [:button {:on-click #(rf/dispatch [:pause])} "pause"]
-      [:button {:on-click #(rf/dispatch [:reset])} "reset"]]
      [:svg {:style               {:width  "100%"
-                                  :height "90vh"}
+                                  :height "97vh"}
             :viewBox             "0 0 100 100"
             :preserveAspectRatio "xMidYMid meet"}
-      [clock]]]))
+      [clock]]
+     [:div.buttons
+      [adder-button "10s" 10]
+      [adder-button "1m" 60]
+      [adder-button "5m" 300]
+      [reset-button]]
+     ]))
 
 (defn stop []
   (println "Stopping..."))
