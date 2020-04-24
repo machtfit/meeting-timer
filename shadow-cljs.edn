@@ -1,12 +1,17 @@
 ;; shadow-cljs configuration
 {:source-paths ["src"]
 
- :dependencies [[cider/cider-nrepl "0.22.0"]
+ :dependencies [[cider/cider-nrepl "0.25.0-SNAPSHOT"]
+                [cider/piggieback "0.4.2"]
+                [refactor-nrepl "2.5.0"]
                 [reagent "0.9.1" :exclusions [cljsjs/react cljsjs/react-dom]]
                 [re-frame "0.11.0"]
                 [day8.re-frame/re-frame-10x "0.5.2"]
                 [cljs-node-io "1.1.2"]
                 [binaryage/devtools "0.9.10"]]
+
+ :nrepl {:middleware [cider.piggieback/wrap-cljs-repl
+                      refactor-nrepl.middleware/wrap-refactor]}
 
  :builds {:main {:target           :browser
                  :modules          {:main {:entries [countdown-clock.main]}}
