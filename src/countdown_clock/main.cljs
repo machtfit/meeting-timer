@@ -5,7 +5,7 @@
             [reagent.core :as r]))
 
 (defn timestamp []
-  (/ (.getTime (js/Date.)) 1000.0))
+  (/ (.now js/Date) 1000.0))
 
                                         ; subs
 
@@ -37,6 +37,7 @@
 (defn set-interval [db]
   (-> db
       (stop-interval)
+      (assoc :last-tick (timestamp))
       (assoc :interval-timer (js/setInterval #(rf/dispatch [:tick]) granularity))))
 
 (rf/reg-event-db
@@ -64,7 +65,14 @@
 (rf/reg-event-db
  :tick
  (fn [db _]
-   (update db :passed-time + (/ granularity 1000.0))))
+   (let [last-tick (:last-tick db)
+         now       (timestamp)
+         diff      (if last-tick
+                     (- now last-tick)
+                     0)]
+     (-> db
+         (update :passed-time + diff)
+         (assoc :last-tick now)))))
 
                                         ; views
 (defonce aquafit-blue "#008ca0")
@@ -94,7 +102,7 @@
                           machtfit-green)
         mins            (int (/ (Math/abs remaining-time) 60))
         secs            (int (rem (Math/abs remaining-time) 60))
-        passed-time-str (when passed-time
+        remaining-time-str (when remaining-time
                           (str (when (neg? remaining-time) "-") (format "%d:%02d" mins secs)))
         radius          49
         angle           (* 359.9999 progress)
@@ -113,14 +121,14 @@
                :style {:stroke     "none"
                        :fill       color
                        :transition "fill 1s"}}])
-     (when passed-time
-       [:text {:x           (- (* 6.5 (count passed-time-str)))
+     (when remaining-time
+       [:text {:x           (- (* 6.5 (count remaining-time-str)))
                :y           6
                :text-anchor "start"
                :style       {:fill      zen-white
                              :stroke    "none"
                              :font-size 25}}
-        passed-time-str])]))
+        remaining-time-str])]))
 
 (defn app []
   (fn []
