@@ -18,6 +18,20 @@ body {
   top: 1em;
 }
 
+.buttons > div {
+  margin-bottom: 10px;
+}
+
+.buttons2 {
+  display: block;
+  position: absolute;
+  right: 1em;
+  bottom: 1em;
+}
+
+.buttons2 > div {
+  margin-top: 10px;
+}
 .no-select {
   -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
@@ -40,10 +54,6 @@ body {
 
 .button:hover {
   background-color: #008ca0;
-}
-
-.adder {
-  margin-bottom: 0.5em;
 }
 
 .adder div {
@@ -73,8 +83,21 @@ body {
   border-radius: 0 0.3em 0.3em 0;
 }
 
-.reset {
+.reset,
+.start {
+  display: block;
   width: 3.4em;
+  height: 1.2em;
   border: 3px solid #14976f;
   border-radius: 0.3em;
+  vertical-align: middle;
+}
+
+.paused {
+  line-height: 1.2em;
+}
+
+.running {
+  font-size: 0.7em;
+  line-height: 1.6em;
 }

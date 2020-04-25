@@ -94,7 +94,6 @@
 (defonce raspberrysmoothie-pink "#e62e73")
 (defonce night-black "#122020")
 (defonce zen-white "#ffffff")
-
 (defonce alarm-red "#d22")
 
 (defn integer-field [key]
@@ -151,7 +150,9 @@
     {:on-click #(rf/dispatch [:add-to-total-duration (- duration)])}
     "-"]
    [:div.button.text.no-select
-    {:on-click #(rf/dispatch [:set :duration duration])}
+    {:on-click #(do
+                  (rf/dispatch [:set :passed-time 0])
+                  (rf/dispatch [:set :duration duration]))}
     text]
    [:div.button.plus.no-select
     {:on-click #(rf/dispatch [:add-to-total-duration duration])}
@@ -161,6 +162,14 @@
   [:div.button.reset.no-select
    {:on-click #(rf/dispatch [:reset])}
    "⟳"])
+
+(defn start-button []
+  (let [running? @(rf/subscribe [:get :running?])]
+    [:div.button.start.no-select
+     {:on-click #(rf/dispatch [:toggle])}
+     (if running?
+       [:div.running "▐ ▌"]
+       [:div.paused "▶"])]))
 
 (defn key-id [event]
   (keyword (.-code event)))
@@ -183,9 +192,10 @@
      [:div.buttons
       [adder-button "10s" 10]
       [adder-button "1m" 60]
-      [adder-button "5m" 300]
-      [reset-button]]
-     ]))
+      [adder-button "5m" 300]]
+     [:div.buttons2
+      [reset-button]
+      [start-button]]]))
 
 (defn stop []
   (println "Stopping..."))
