@@ -1,6 +1,7 @@
 (ns countdown-clock.main
   (:require [clojure.string :as s]
-            [goog.string :refer [format]]
+            [goog.string :as gstring]
+            [goog.string.format]
             [re-frame.core :as rf]
             [reagent.core :as r]))
 
@@ -115,7 +116,7 @@
         mins               (int (/ (Math/abs remaining-time) 60))
         secs               (int (rem (Math/abs remaining-time) 60))
         remaining-time-str (when remaining-time
-                             (str (when (neg? remaining-time) "-") (format "%d:%02d" mins secs)))
+                             (str (when (neg? remaining-time) "-") (gstring/format "%d:%02d" mins secs)))
         radius             49
         angle              (* 359.9999 progress)
         angle-rad          (* (- angle 90) (/ Math/PI 180.0))
