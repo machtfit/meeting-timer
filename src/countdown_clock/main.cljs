@@ -33,7 +33,7 @@
 (rf/reg-event-db
  :add-to-total-duration
  (fn [db [_ value]]
-   (update db :duration #(max 0 (+ % value)))))
+   (update db :duration + value)))
 
 (defn stop-interval [db]
   (let [previous-timer (:interval-timer db)]
@@ -107,7 +107,8 @@
   (let [duration           @(rf/subscribe [:get :duration])
         passed-time        @(rf/subscribe [:get :passed-time])
         remaining-time     (- duration passed-time)
-        progress           (min 1.0 (if (zero? duration) 1.0 (/ passed-time duration)))
+        progress-duration  (max 0 duration)
+        progress           (min 1.0 (if (zero? progress-duration) 1.0 (/ passed-time progress-duration)))
         color              (condp < progress
                              0.98 alarm-red
                              0.9  raspberrysmoothie-pink
