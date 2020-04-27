@@ -124,11 +124,10 @@
         arc-x              (* radius (Math/cos angle-rad))
         arc-y              (* radius (Math/sin angle-rad))
         large-arc-flag     (if (> angle 180) 1 0)]
-    [:g.no-select {:transform "translate(50, 50)"
-                   :on-click  #(rf/dispatch [:toggle])
-                   :style     {:cursor "pointer"}}
-     [:circle {:cx    0
-               :cy    0
+    [:g.no-select {:on-click #(rf/dispatch [:toggle])
+                   :style    {:cursor "pointer"}}
+     [:circle {:cx    50
+               :cy    50
                :r     radius
                :style {:stroke "none"
                        :fill   aquafit-blue}}]
@@ -138,12 +137,13 @@
                        :fill       color
                        :transition "fill 1s"}}])
      (when remaining-time
-       [:text {:x           (- (* 6.5 (count remaining-time-str)))
-               :y           6
-               :text-anchor "start"
-               :style       {:fill      zen-white
-                             :stroke    "none"
-                             :font-size 25}}
+       [:text {:x                  "50%"
+               :y                  "50%"
+               :text-anchor        "middle"
+               :alignment-baseline "central"
+               :style              {:fill      zen-white
+                                    :stroke    "none"
+                                    :font-size 25}}
         remaining-time-str])]))
 
 (defn adder-button [text duration]
