@@ -1,0 +1,17 @@
+** Development
+Have a Node environment, ideally using ~nvm~, then run:
+#+BEGIN_QUOTE shell
+make setup-dev
+#+END_QUOTE
+
+To run a development server with hot-reload and all that run:
+#+BEGIN_QUOTE shell
+make dev
+#+END_QUOTE
+
+** Build release
+To build a release version run:
+#+BEGIN_QUOTE shell
+make release
+#+END_QUOTE
+The app can then be found in ~./release~.
