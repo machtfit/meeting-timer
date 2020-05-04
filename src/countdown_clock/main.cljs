@@ -106,7 +106,7 @@
 (defn clock []
   (let [duration           @(rf/subscribe [:get :duration])
         passed-time        @(rf/subscribe [:get :passed-time])
-        remaining-time     (- duration passed-time)
+        remaining-time     (js/Math.ceil (- duration passed-time))
         progress-duration  (max 0 duration)
         progress           (min 1.0 (if (zero? progress-duration) 1.0 (/ passed-time progress-duration)))
         color              (condp < progress
