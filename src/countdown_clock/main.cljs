@@ -97,33 +97,51 @@
 (defonce zen-white "#ffffff")
 (defonce alarm-red "#d22")
 
+(defn get-string-width [text font-size]
+  (let [element (js/document.getElementById "text-test")]
+    (set! (.. element -style -fontSize) font-size)
+    (set! (.. element -innerHTML) text)
+    (inc (.. element -clientWidth))))
+
+(defn get-max-width [text font-size]
+  (get-string-width (s/replace text #"[0-9]" "0") font-size))
+
 (defn integer-field [key]
   [:input {:type      "input"
            :value     @(rf/subscribe [:get key])
            :on-change (fn [e] (rf/dispatch [:set key (int (-> e .-target .-value))]))}])
 
-
 (defn clock []
-  (let [duration           @(rf/subscribe [:get :duration])
-        passed-time        @(rf/subscribe [:get :passed-time])
-        remaining-time     (js/Math.ceil (- duration passed-time))
-        progress-duration  (max 0 duration)
-        progress           (min 1.0 (if (zero? progress-duration) 1.0 (/ passed-time progress-duration)))
-        color              (condp < progress
-                             0.98 alarm-red
-                             0.9  raspberrysmoothie-pink
-                             0.5  sonnengruss-yellow
-                             machtfit-green)
-        mins               (int (/ (Math/abs remaining-time) 60))
-        secs               (int (rem (Math/abs remaining-time) 60))
-        remaining-time-str (when remaining-time
-                             (str (when (neg? remaining-time) "-") (gstring/format "%d:%02d" mins secs)))
-        radius             49
-        angle              (* 359.9999 progress)
-        angle-rad          (* (- angle 90) (/ Math/PI 180.0))
-        arc-x              (* radius (Math/cos angle-rad))
-        arc-y              (* radius (Math/sin angle-rad))
-        large-arc-flag     (if (> angle 180) 1 0)]
+  (let [duration                 @(rf/subscribe [:get :duration])
+        passed-time              @(rf/subscribe [:get :passed-time])
+        remaining-time           (js/Math.ceil (- duration passed-time))
+        progress-duration        (max 0 duration)
+        progress                 (min 1.0 (if (zero? progress-duration) 1.0 (/ passed-time progress-duration)))
+        color                    (condp < progress
+                                   0.98 alarm-red
+                                   0.9  raspberrysmoothie-pink
+                                   0.5  sonnengruss-yellow
+                                   machtfit-green)
+        mins                     (int (/ (Math/abs remaining-time) 60))
+        secs                     (int (rem (Math/abs remaining-time) 60))
+        font-size                25
+        remaining-time-str-left  (when remaining-time
+                                   (str (when (neg? remaining-time) "-") (gstring/format "%d" mins)))
+        remaining-time-str-right (when remaining-time (gstring/format "%02d" secs))
+        left-width               (get-max-width remaining-time-str-left font-size)
+        right-width              (get-max-width remaining-time-str-right font-size)
+        total-width              (get-max-width (str remaining-time-str-left ":" remaining-time-str-right) font-size)
+        colon-width              (get-string-width ":" font-size)
+        middle-width             (- total-width left-width right-width)
+        colon-spacing            (inc (/ colon-width 2))
+        colon-offset             (+ (- left-width (/ total-width  2))
+                                    (/ middle-width 2))
+        radius                   49
+        angle                    (* 359.9999 progress)
+        angle-rad                (* (- angle 90) (/ Math/PI 180.0))
+        arc-x                    (* radius (Math/cos angle-rad))
+        arc-y                    (* radius (Math/sin angle-rad))
+        large-arc-flag           (if (> angle 180) 1 0)]
     [:g.no-select {:transform "translate(50, 50)"
                    :on-click  #(rf/dispatch [:toggle])
                    :style     {:cursor "pointer"}}
@@ -138,13 +156,29 @@
                        :fill       color
                        :transition "fill 1s"}}])
      (when remaining-time
-       [:text {:x           (- (* 6.5 (count remaining-time-str)))
-               :y           6
-               :text-anchor "start"
-               :style       {:fill      zen-white
-                             :stroke    "none"
-                             :font-size 25}}
-        remaining-time-str])]))
+       [:g
+        [:text {:x           (- colon-offset colon-spacing)
+                :y           6
+                :text-anchor "end"
+                :style       {:fill      zen-white
+                              :stroke    "none"
+                              :font-size font-size}}
+         remaining-time-str-left]
+        [:text {:x           colon-offset
+                :y           6
+                :text-anchor "middle"
+                :style       {:fill      zen-white
+                              :stroke    "none"
+                              :font-size font-size}}
+         ":"]
+        [:text {:x           (+ colon-offset colon-spacing)
+                :y           6
+                :text-anchor "start"
+                :style       {:fill      zen-white
+                              :stroke    "none"
+                              :font-size font-size}}
+         remaining-time-str-right] ]
+       )]))
 
 (defn adder-button [text duration]
   [:div.adder

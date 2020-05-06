@@ -101,3 +101,11 @@ body {
   font-size: 0.7em;
   line-height: 1.6em;
 }
+
+#text-test {
+    position: absolute;
+    visibility: hidden;
+    height: auto;
+    width: auto;
+    white-space: nowrap;
+}
