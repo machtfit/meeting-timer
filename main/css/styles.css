@@ -93,15 +93,6 @@ body {
   vertical-align: middle;
 }
 
-.paused {
-  line-height: 1.2em;
-}
-
-.running {
-  font-size: 0.7em;
-  line-height: 1.6em;
-}
-
 #text-test {
     position: absolute;
     visibility: hidden;

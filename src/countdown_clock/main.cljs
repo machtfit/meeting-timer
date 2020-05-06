@@ -194,18 +194,26 @@
     {:on-click #(rf/dispatch [:add-to-total-duration duration])}
     "+"]])
 
+(defn icon [path]
+  [:div {:style {:display        "inline-block"
+                 :vertical-align "middle"
+                 :height         "100%"}}
+   [:img {:src   path
+          :style {:height         "1em"
+                  :vertical-align "middle"}}]])
+
 (defn reset-button []
   [:div.button.reset.no-select
    {:on-click #(rf/dispatch [:reset])}
-   "⟳"])
+   (icon "img/refresh-icon.svg")])
 
 (defn start-button []
   (let [running? @(rf/subscribe [:get :running?])]
     [:div.button.start.no-select
      {:on-click #(rf/dispatch [:toggle])}
      (if running?
-       [:div.running "▐ ▌"]
-       [:div.paused "▶"])]))
+       [:div.running (icon "img/pause-icon.svg")]
+       [:div.paused (icon "img/play-icon.svg")])]))
 
 (defn key-id [event]
   (keyword (.-code event)))
