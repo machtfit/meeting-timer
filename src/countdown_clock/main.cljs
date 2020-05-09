@@ -1,7 +1,6 @@
 (ns countdown-clock.main
   (:require [clojure.string :as s]
             [goog.string :as gstring]
-            [goog.string.format]
             [re-frame.core :as rf]
             [reagent.core :as r]))
 
@@ -34,6 +33,11 @@
  :add-to-total-duration
  (fn [db [_ value]]
    (update db :duration + value)))
+
+(rf/reg-event-db
+ :toggle-controls
+ (fn [db _]
+   (update db :hide-controls? not)))
 
 (defn stop-interval [db]
   (let [previous-timer (:interval-timer db)]
@@ -215,31 +219,40 @@
        [:div.running (icon "img/pause-icon.svg")]
        [:div.paused (icon "img/play-icon.svg")])]))
 
-(defn key-id [event]
-  (keyword (.-code event)))
+(defn key-char [event]
+  (.-key event))
 
 (defn on-key-press [event]
-  (let [key-id (key-id event)]
-    (when (= key-id :Space)
-      (rf/dispatch [:toggle]))))
+  (let [key-char (key-char event)]
+    (cond
+      (= key-char " ")                   (rf/dispatch [:toggle])
+      (= key-char "r")                   (rf/dispatch [:reset])
+      (= key-char "h")                   (rf/dispatch [:toggle-controls])
+      (= key-char "0")                   (rf/dispatch [:set :duration 0])
+      (s/includes? "123456789" key-char) (rf/dispatch [:add-to-total-duration (* (js/parseInt key-char) 60)])
+      :else                              (println key-char event)
+      )))
 
 (defn app []
   (set! (.-onkeypress js/window) on-key-press)
   (fn []
-    [:div
-     {:style {:width "100%"}}
-     [:svg {:style               {:width  "100%"
-                                  :height "97vh"}
-            :viewBox             "0 0 100 100"
-            :preserveAspectRatio "xMidYMid meet"}
-      [clock]]
-     [:div.buttons
-      [adder-button "10s" 10]
-      [adder-button "1m" 60]
-      [adder-button "5m" 300]]
-     [:div.buttons2
-      [reset-button]
-      [start-button]]]))
+    (let [hide-controls? @(rf/subscribe [:get :hide-controls?])
+          controls-style {:transition "opacity 1s"
+                          :opacity    (if hide-controls? 0 1)}]
+      [:div
+       {:style {:width "100%"}}
+       [:svg {:style               {:width  "100%"
+                                    :height "97vh"}
+              :viewBox             "0 0 100 100"
+              :preserveAspectRatio "xMidYMid meet"}
+        [clock]]
+       [:div.buttons {:style controls-style}
+        [adder-button "10s" 10]
+        [adder-button "1m" 60]
+        [adder-button "5m" 300]]
+       [:div.buttons2 {:style controls-style}
+        [reset-button]
+        [start-button]]])))
 
 (defn stop []
   (println "Stopping..."))
