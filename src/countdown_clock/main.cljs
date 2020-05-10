@@ -1,6 +1,7 @@
 (ns countdown-clock.main
   (:require [clojure.string :as s]
             [goog.string :as gstring]
+            [goog.string.format]  ;; required for release build
             [re-frame.core :as rf]
             [reagent.core :as r]))
 
