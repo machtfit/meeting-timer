@@ -1,5 +1,6 @@
 (ns countdown-clock.main
   (:require [clojure.string :as s]
+            [countdown-clock.catmullrom :as cmr]
             [goog.string :as gstring]
             [goog.string.format]  ;; required for release build
             [re-frame.core :as rf]
@@ -116,10 +117,36 @@
            :value     @(rf/subscribe [:get key])
            :on-change (fn [e] (rf/dispatch [:set key (int (-> e .-target .-value))]))}])
 
+(defn figure-eight [r amplitude speed]
+  (let [t (* r speed)]
+    [(* amplitude (Math/cos t))
+     (* amplitude (Math/cos t) (Math/sin t))]))
+
+(defn arc-point [radius remaining-time angle]
+  (let [angle-rad           (* (- angle 90) (/ Math/PI 180.0))
+        overtime-max        -30
+        clamped-time        (max remaining-time overtime-max)
+        reshape?            (neg? remaining-time)
+        amplitude           (* 10 (/ clamped-time overtime-max) (Math/sin remaining-time))
+        speed               (* 5 (/ clamped-time overtime-max))
+        jerk-amplitude      (* 5 (/ clamped-time overtime-max))
+        jerk-speed          (* 7 (/ clamped-time overtime-max))
+        effective-radius    (if reshape?
+                              (+ radius (* amplitude (Math/sin (+ (* 7 angle-rad) (* speed remaining-time)))))
+                              radius)
+        [offset-x offset-y] (if reshape?
+                              (figure-eight remaining-time jerk-amplitude jerk-speed)
+                              [0 0])]
+    {:x     (+ (* effective-radius (Math/cos angle-rad)) offset-x)
+     :y     (+ (* effective-radius (Math/sin angle-rad)) offset-y)
+     :angle angle-rad
+     :d     1}))
+
 (defn clock []
   (let [duration                 @(rf/subscribe [:get :duration])
         passed-time              @(rf/subscribe [:get :passed-time])
-        remaining-time           (js/Math.ceil (- duration passed-time))
+        remaining-time-precise   (- duration passed-time)
+        remaining-time           (js/Math.ceil remaining-time-precise)
         progress-duration        (max 0 duration)
         progress                 (min 1.0 (if (zero? progress-duration) 1.0 (/ passed-time progress-duration)))
         color                    (condp < progress
@@ -141,22 +168,21 @@
         colon-spacing            (inc (/ colon-width 2))
         colon-offset             (+ (- left-width (/ total-width  2))
                                     (/ middle-width 2))
-        radius                   49
-        angle                    (* 359.9999 progress)
-        angle-rad                (* (- angle 90) (/ Math/PI 180.0))
-        arc-x                    (* radius (Math/cos angle-rad))
-        arc-y                    (* radius (Math/sin angle-rad))
-        large-arc-flag           (if (> angle 180) 1 0)]
+        radius                   40
+        angle                    (* 360 progress)
+        shape-function           (partial arc-point radius (- remaining-time-precise 5))
+        clock-shape-points       (vec (map shape-function (range 0 360.0001 1)))
+        clock-shape              (cmr/catmullrom clock-shape-points)
+        arc-points               (vec (map shape-function (concat (range 0 angle 1) [angle])))
+        arc-curve                (cmr/catmullrom arc-points)]
     [:g.no-select {:transform "translate(50, 50)"
                    :on-click  #(rf/dispatch [:toggle])
                    :style     {:cursor "pointer"}}
-     [:circle {:cx    0
-               :cy    0
-               :r     radius
-               :style {:stroke "none"
-                       :fill   aquafit-blue}}]
-     (when passed-time
-       [:path {:d     (s/join " " (map str ["M" 0 (- radius) "A" radius radius 0 large-arc-flag 1 arc-x arc-y "L" 0 0 "Z"]))
+     [:path {:d     (cmr/curve->svg-closed-path clock-shape)
+             :style {:fill   aquafit-blue
+                     :stroke "none"}}]
+     (when (and passed-time (> (count arc-points) 1))
+       [:path {:d     (s/join " " (map str ["M" 0 (- radius) (cmr/curve->svg-path arc-curve) "L" 0 0 "Z"]))
                :style {:stroke     "none"
                        :fill       color
                        :transition "fill 1s"}}])
@@ -182,8 +208,7 @@
                 :style       {:fill      zen-white
                               :stroke    "none"
                               :font-size font-size}}
-         remaining-time-str-right] ]
-       )]))
+         remaining-time-str-right]])]))
 
 (defn adder-button [text duration]
   [:div.adder
@@ -231,8 +256,7 @@
       (= key-char "h")                   (rf/dispatch [:toggle-controls])
       (= key-char "0")                   (rf/dispatch [:set :duration 0])
       (s/includes? "123456789" key-char) (rf/dispatch [:add-to-total-duration (* (js/parseInt key-char) 60)])
-      :else                              (println key-char event)
-      )))
+      :else                              (println key-char event))))
 
 (defn app []
   (set! (.-onkeypress js/window) on-key-press)
