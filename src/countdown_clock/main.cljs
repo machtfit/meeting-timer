@@ -276,7 +276,12 @@
         [adder-button "1m" 60]
         [adder-button "5m" 300]
         [reset-button]
-        [start-button]]])))
+        [start-button]]
+       [:div.logo
+        [:a {:href   "https://www.machtfit.de/"
+             :target "_blank"}
+         [:div "Powered by"]
+         [:img {:src "img/machtfit-logo.png"}]]]])))
 
 (defn stop []
   (println "Stopping..."))

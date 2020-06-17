@@ -100,4 +100,30 @@ body {
   width: auto;
   white-space: nowrap;
 }
+
+.logo {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: table;
+  width: 64px;
+  color: #888;
+}
+
+.logo div {
+  display: table-row;
+  white-space: nowrap;
+}
+
+.logo img {
+  display: table-row;
+  width: 100%;
+}
+
+a,
+a:hover,
+a:focus,
+a:active {
+  text-decoration: none;
+  color: inherit;
 }
