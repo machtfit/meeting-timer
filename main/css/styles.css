@@ -63,23 +63,23 @@ body {
 
 .adder .minus {
   width: 0.8em;
-  border-left: 3px solid #14976f;
-  border-top: 3px solid #14976f;
-  border-bottom: 3px solid #14976f;
+  border-left: 2px solid #14976f;
+  border-top: 2px solid #14976f;
+  border-bottom: 2px solid #14976f;
   border-radius: 0.3em 0 0 0.3em;
 }
 
 .adder .text {
   width: 1.8em;
-  border-top: 3px solid #14976f;
-  border-bottom: 3px solid #14976f;
+  border-top: 2px solid #14976f;
+  border-bottom: 2px solid #14976f;
 }
 
 .adder .plus {
   width: 0.8em;
-  border-right: 3px solid #14976f;
-  border-top: 3px solid #14976f;
-  border-bottom: 3px solid #14976f;
+  border-right: 2px solid #14976f;
+  border-top: 2px solid #14976f;
+  border-bottom: 2px solid #14976f;
   border-radius: 0 0.3em 0.3em 0;
 }
 
@@ -88,7 +88,7 @@ body {
   display: block;
   width: 3.4em;
   height: 1.2em;
-  border: 3px solid #14976f;
+  border: 2px solid #14976f;
   border-radius: 0.3em;
   vertical-align: middle;
 }
