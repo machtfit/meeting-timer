@@ -274,8 +274,7 @@
        [:div.buttons {:style controls-style}
         [adder-button "10s" 10]
         [adder-button "1m" 60]
-        [adder-button "5m" 300]]
-       [:div.buttons2 {:style controls-style}
+        [adder-button "5m" 300]
         [reset-button]
         [start-button]]])))
 
