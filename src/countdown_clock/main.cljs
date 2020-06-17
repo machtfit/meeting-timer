@@ -41,6 +41,11 @@
  (fn [db _]
    (update db :hide-controls? not)))
 
+(rf/reg-event-db
+ :toggle-help
+ (fn [db _]
+   (update db :show-help? not)))
+
 (defn stop-interval [db]
   (let [previous-timer (:interval-timer db)]
     (when previous-timer (js/clearInterval previous-timer))
@@ -213,15 +218,18 @@
 (defn adder-button [text duration]
   [:div.adder
    [:div.button.minus.no-select
-    {:on-click #(rf/dispatch [:add-to-total-duration (- duration)])}
+    {:on-click #(rf/dispatch [:add-to-total-duration (- duration)])
+     :title    (str "Minus " text)}
     "-"]
    [:div.button.text.no-select
     {:on-click #(do
                   (rf/dispatch [:set :passed-time 0])
-                  (rf/dispatch [:set :duration duration]))}
+                  (rf/dispatch [:set :duration duration]))
+     :title    (str "Set " text)}
     text]
    [:div.button.plus.no-select
-    {:on-click #(rf/dispatch [:add-to-total-duration duration])}
+    {:on-click #(rf/dispatch [:add-to-total-duration duration])
+     :title    (str "Plus " text)}
     "+"]])
 
 (defn icon [path]
@@ -234,16 +242,46 @@
 
 (defn reset-button []
   [:div.button.reset.no-select
-   {:on-click #(rf/dispatch [:reset])}
+   {:on-click #(rf/dispatch [:reset])
+    :title    "Reset"}
    (icon "img/refresh-icon.svg")])
 
 (defn start-button []
   (let [running? @(rf/subscribe [:get :running?])]
     [:div.button.start.no-select
-     {:on-click #(rf/dispatch [:toggle])}
+     {:on-click #(rf/dispatch [:toggle])
+      :title    (if running? "Pause" "Start")}
      (if running?
        [:div.running (icon "img/pause-icon.svg")]
        [:div.paused (icon "img/play-icon.svg")])]))
+
+(defn key-display [char]
+  (let [space-key? (= char " ")]
+    [:div.key.no-select {:class (when space-key? "space-key")}
+     [:img {:src (if space-key? "img/space-key.svg" "img/key.svg")}]
+     [:div char]]))
+
+(defn help []
+  (let [keys       [["?" "Show/hide this help"]
+                    ["r" "Reset timer to start time"]
+                    ["h" "Show/hide controls"]
+                    [" " "Start/pause timer"]
+                    ["0" "Set start time to 00:00"]]
+        show-help? @(rf/subscribe [:get :show-help?])]
+    [:div.help {:style {:transition "opacity 1s"
+                        :opacity    (if show-help? 1 0)}}
+     [:div.table
+      (for [[key description] keys]
+        ^{:key key}
+        [:div.row
+         [:div.cell.key-cell [key-display key]]
+         [:div.cell.key-description-cell description]])
+      [:div.row
+       [:div.cell.key-cell
+        [key-display "1"]
+        [:div.key [:div "to"]]
+        [key-display "9"]]
+       [:div.cell.key-description-cell "Add <N> minutes"]]]]))
 
 (defn key-char [event]
   (.-key event))
@@ -254,6 +292,7 @@
       (= key-char " ")                   (rf/dispatch [:toggle])
       (= key-char "r")                   (rf/dispatch [:reset])
       (= key-char "h")                   (rf/dispatch [:toggle-controls])
+      (= key-char "?")                   (rf/dispatch [:toggle-help])
       (= key-char "0")                   (rf/dispatch [:set :duration 0])
       (s/includes? "123456789" key-char) (rf/dispatch [:add-to-total-duration (* (js/parseInt key-char) 60)])
       :else                              (println key-char event))))
@@ -281,7 +320,15 @@
         [:a {:href   "https://www.machtfit.de/"
              :target "_blank"}
          [:div "Powered by"]
-         [:img {:src "img/machtfit-logo.png"}]]]])))
+         [:img {:src "img/machtfit-logo.png"}]]]
+       [:div {:style controls-style}
+        [:div {:on-click #(rf/dispatch [:toggle-help])
+               :style    {:position "absolute"
+                          :top      "1em"
+                          :left     "1em"
+                          :cursor   "pointer"}}
+         [key-display "?"]]
+        [help]]])))
 
 (defn stop []
   (println "Stopping..."))
