@@ -167,6 +167,10 @@ a:active {
   vertical-align: middle;
 }
 
+.cell.last {
+  padding-bottom: 0;
+}
+
 .key-cell {
   padding-right: 3em;
 }
