@@ -268,7 +268,7 @@
                     ["r" "Reset timer to start time"]
                     ["h" "Show/hide controls"]
                     [" " "Start/pause timer"]
-                    ["0" "Set start time to 00:00"]]
+                    ["0" "Set start time to 0:00"]]
         show-help? @(rf/subscribe [:get :show-help?])]
     [:div.help {:style {:transition "opacity 1s"
                         :opacity    (if show-help? 1 0)}}
