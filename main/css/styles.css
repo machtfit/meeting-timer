@@ -50,6 +50,8 @@ body {
   font-size: 3em;
   color: #ffffff;
   background-color: #34b78f;
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
 }
 
 .button:hover {
@@ -134,7 +136,6 @@ a:active {
   left: 3em;
   z-index: 1;
   background-color: #ddd;
-  border: 1px solid #777;
   border-radius: 1em;
   padding: 2em;
 }
