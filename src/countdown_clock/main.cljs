@@ -283,7 +283,18 @@
         [key-display "1"]
         [:div.key [:div "to"]]
         [key-display "9"]]
-       [:div.cell.key-description-cell "Add <N> minutes"]]]]))
+       [:div.cell.key-description-cell "Add <N> minutes"]]
+      [:div.row
+       [:div.cell.last {:style {:padding-top "1em"}}
+        [:a {:href   "https://github.com/machtfit/meeting-timer/"
+             :target "_blank"
+             :title  "meeting-timer on GitHub"
+             :style  {:cursor "pointer"}}
+         [:img {:src   "img/github-logo.svg"
+                :style {:width   "2.5em"
+                        :opacity 0.8}}]]]
+       [:div.cell.last {:style {:padding-top "1em"}}
+        "fork and code!"]]]]))
 
 (defn key-char [event]
   (.-key event))
@@ -329,17 +340,7 @@
                           :left     "1em"
                           :cursor   "pointer"}}
          [key-display "?"]]
-        [help]]
-       [:div {:style controls-style}
-        [:a {:href   "https://github.com/machtfit/meeting-timer/"
-             :target "_blank"
-             :style  {:position "absolute"
-                      :bottom   "1em"
-                      :right    "1em"
-                      :cursor   "pointer"}}
-         [:img {:src   "img/github-logo.svg"
-                :style {:width   "2.5em"
-                        :opacity 0.8}}]]]])))
+        [help]]])))
 
 (defn stop []
   (println "Stopping..."))
