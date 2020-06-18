@@ -329,7 +329,17 @@
                           :left     "1em"
                           :cursor   "pointer"}}
          [key-display "?"]]
-        [help]]])))
+        [help]]
+       [:div {:style controls-style}
+        [:a {:href   "https://github.com/machtfit/meeting-timer/"
+             :target "_blank"
+             :style  {:position "absolute"
+                      :bottom   "1em"
+                      :right    "1em"
+                      :cursor   "pointer"}}
+         [:img {:src   "img/github-logo.svg"
+                :style {:width   "2.5em"
+                        :opacity 0.8}}]]]])))
 
 (defn stop []
   (println "Stopping..."))
