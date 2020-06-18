@@ -233,12 +233,14 @@
     "+"]])
 
 (defn icon [path]
-  [:div {:style {:display        "inline-block"
-                 :vertical-align "middle"
-                 :height         "100%"}}
+  [:div {:style {:position "relative"
+                 :height   "100%"}}
    [:img {:src   path
-          :style {:height         "1em"
-                  :vertical-align "middle"}}]])
+          :style {:position  "absolute"
+                  :top       "50%"
+                  :left      "50%"
+                  :height    "1em"
+                  :transform "translate(-50%, -50%)"}}]])
 
 (defn reset-button []
   [:div.button.reset.no-select
@@ -252,8 +254,8 @@
      {:on-click #(rf/dispatch [:toggle])
       :title    (if running? "Pause" "Start")}
      (if running?
-       [:div.running (icon "img/pause-icon.svg")]
-       [:div.paused (icon "img/play-icon.svg")])]))
+       (icon "img/pause-icon.svg")
+       (icon "img/play-icon.svg"))]))
 
 (defn key-display [char]
   (let [space-key? (= char " ")]

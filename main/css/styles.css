@@ -47,52 +47,44 @@ body {
   text-align: center;
   transition: background-color 0.6s;
   cursor: pointer;
-  font-size: 3em;
+  font-size: 2em;
   color: #ffffff;
-  background-color: #34b78f;
-  padding-top: 0.1em;
-  padding-bottom: 0.1em;
+  background-color: #00bd91;
+  height: 1.6em;
 }
 
 .button:hover {
-  background-color: #008ca0;
+  background-color: #009871;
 }
 
 .adder div {
-  display: inline-block;
   transition: background-color 0.6s;
 }
 
 .adder .minus {
-  width: 0.8em;
-  border-left: 2px solid #14976f;
-  border-top: 2px solid #14976f;
-  border-bottom: 2px solid #14976f;
-  border-radius: 0.3em 0 0 0.3em;
+  width: 1.2em;
+  padding-left: 0.2em;
+  border-radius: 0.8em 0 0 0.8em;
+  line-height: 1.6em;
 }
 
 .adder .text {
-  width: 1.8em;
-  border-top: 2px solid #14976f;
-  border-bottom: 2px solid #14976f;
+  width: 2em;
+  line-height: 1.6em;
 }
 
 .adder .plus {
-  width: 0.8em;
-  border-right: 2px solid #14976f;
-  border-top: 2px solid #14976f;
-  border-bottom: 2px solid #14976f;
-  border-radius: 0 0.3em 0.3em 0;
+  width: 1.2em;
+  padding-right: 0.2em;
+  border-radius: 0 0.8em 0.8em 0;
+  line-height: 1.6em;
 }
 
 .reset,
 .start {
   display: block;
-  width: 3.4em;
-  height: 1.2em;
-  border: 2px solid #14976f;
-  border-radius: 0.3em;
-  vertical-align: middle;
+  width: 4.8em;
+  border-radius: 0.8em;
 }
 
 #text-test {
@@ -107,18 +99,12 @@ body {
   position: absolute;
   left: 1em;
   bottom: 1em;
-  display: table;
-  width: 64px;
+  width: 150px;
   color: #888;
 }
 
-.logo div {
-  display: table-row;
-  white-space: nowrap;
-}
 
 .logo img {
-  display: table-row;
   width: 100%;
 }
 
