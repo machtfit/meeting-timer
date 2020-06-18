@@ -319,7 +319,6 @@
        [:div.logo
         [:a {:href   "https://www.machtfit.de/"
              :target "_blank"}
-         [:div "Powered by"]
          [:img {:src "img/machtfit-logo.png"}]]]
        [:div {:style controls-style}
         [:div {:on-click #(rf/dispatch [:toggle-help])
