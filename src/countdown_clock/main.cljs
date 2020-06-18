@@ -306,9 +306,8 @@
       (= key-char "r")                   (rf/dispatch [:reset])
       (= key-char "h")                   (rf/dispatch [:toggle-controls])
       (= key-char "?")                   (rf/dispatch [:toggle-help])
-      (= key-char "0")                   (rf/dispatch [:set :duration 0])
-      (s/includes? "123456789" key-char) (rf/dispatch [:add-to-total-duration (* (js/parseInt key-char) 60)])
-      :else                              (println key-char event))))
+      (= key-char "0")                   (rf/dispatch [:set-duration 0])
+      (s/includes? "123456789" key-char) (rf/dispatch [:add-to-total-duration (* (js/parseInt key-char) 60)]))))
 
 (defn app []
   (set! (.-onkeypress js/window) on-key-press)
