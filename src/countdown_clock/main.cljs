@@ -22,8 +22,8 @@
 
 (rf/reg-event-db
  :initialize-db
- (fn [db _]
-   (merge {:duration 300
+ (fn [db [_ initial-time]]
+   (merge {:duration (or initial-time 300)
            :running? false} db)))
 
 (rf/reg-event-db
@@ -31,10 +31,25 @@
  (fn [db [_ key value]]
    (assoc db key value)))
 
+(defn change-url [duration]
+  (let [duration-str (if (zero? (mod duration 60))
+                       (str (/ duration 60) "m")
+                       (str duration "s"))]
+    (js/history.pushState #js{} nil (str ".?t=" duration-str))))
+
+(rf/reg-event-db
+ :set-duration
+ (fn [db [_ value]]
+   (let [new-db (assoc db :duration value)]
+     (change-url (:duration new-db))
+     new-db)))
+
 (rf/reg-event-db
  :add-to-total-duration
  (fn [db [_ value]]
-   (update db :duration + value)))
+   (let [new-db (update db :duration + value)]
+     (change-url (:duration new-db))
+     new-db)))
 
 (rf/reg-event-db
  :toggle-controls
@@ -224,7 +239,7 @@
    [:div.button.text.no-select
     {:on-click #(do
                   (rf/dispatch [:set :passed-time 0])
-                  (rf/dispatch [:set :duration duration]))
+                  (rf/dispatch [:set-duration duration]))
      :title    (str "Set " text)}
     text]
    [:div.button.plus.no-select
@@ -344,9 +359,20 @@
 (defn stop []
   (println "Stopping..."))
 
-(defn start
-  []
-  (rf/dispatch-sync [:initialize-db])
+(defn parse-time-str [time-str]
+  (let [[_ number-str unit] (re-find #"(-?\d+)([ms]?)" (or time-str ""))
+        number              (js/parseInt number-str)]
+    (case unit
+      ""  number
+      "s" number
+      "m" (* number 60)
+      nil)))
+
+(defn start []
+  (let [get-params   (js/URLSearchParams. js/window.location.search)
+        time-str     (.get get-params "t")
+        initial-time (parse-time-str time-str)]
+    (rf/dispatch-sync [:initialize-db initial-time]))
   (r/render [app]
             (.getElementById js/document "app")))
 
