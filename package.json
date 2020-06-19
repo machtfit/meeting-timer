@@ -1,6 +1,6 @@
 {
-  "name": "countdown-clock",
-  "version": "0.0.1",
+  "name": "meeting-timer",
+  "version": "0.0.9",
   "private": true,
   "scripts": {
     "check": "clj-kondo --lang cljs --lint src"

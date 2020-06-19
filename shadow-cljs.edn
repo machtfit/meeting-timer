@@ -14,11 +14,11 @@
                       refactor-nrepl.middleware/wrap-refactor]}
 
  :builds {:main {:target           :browser
-                 :modules          {:main {:entries [countdown-clock.main]}}
+                 :modules          {:main {:entries [machtfit.meeting-timer.main]}}
                  :output-dir       "main/js/generated"
                  :asset-path       "js/generated"
-                 :devtools         {:before-load countdown-clock.main/stop
-                                    :after-load  countdown-clock.main/start
+                 :devtools         {:before-load machtfit.meeting-timer.main/stop
+                                    :after-load  machtfit.meeting-timer.main/start
                                     :http-root   "main"
                                     :http-port   8081
                                     :preloads    [devtools.preload
