@@ -1,4 +1,4 @@
-(ns countdown-clock.catmullrom
+(ns machtfit.meeting-timer.catmullrom
   (:require [clojure.string :as string]))
 
 ;; catmullrom

@@ -1,6 +1,6 @@
-(ns countdown-clock.main
+(ns machtfit.meeting-timer.main
   (:require [clojure.string :as s]
-            [countdown-clock.catmullrom :as cmr]
+            [machtfit.meeting-timer.catmullrom :as cmr]
             [goog.string :as gstring]
             [goog.string.format]  ;; required for release build
             [re-frame.core :as rf]
