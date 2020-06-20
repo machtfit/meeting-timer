@@ -245,11 +245,6 @@
 
                                         ; views
 
-(defn integer-field [key]
-  [:input {:type      "input"
-           :value     @(rf/subscribe [:get key])
-           :on-change (fn [e] (rf/dispatch [:set key (int (-> e .-target .-value))]))}])
-
 (defn wobble-position [r amplitude speed]
   (let [t (* r speed)]
     [(* amplitude (Math/cos (* 0.8 t)))
