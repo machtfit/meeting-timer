@@ -24,8 +24,9 @@
 (rf/reg-event-db
  :initialize-db
  (fn [db [_ initial-time]]
-   (merge {:duration (or initial-time 300)
-           :running? false} db)))
+   (merge {:duration  (or initial-time 300)
+           :running?  false
+           :font-size 25} db)))
 
 (rf/reg-event-db
  :set
@@ -125,6 +126,7 @@
 (defonce alarm-red "#d22")
 
 (defn get-string-width [text font-size]
+  (println (str "get-string-width " text " " font-size))
   (let [element (js/document.getElementById "text-test")]
     (set! (.. element -style -fontSize) font-size)
     (set! (.. element -innerHTML) text)
@@ -158,39 +160,61 @@
      :angle angle-rad
      :d     1}))
 
+(main/r-sub :string-width [s] []
+            (get-string-width s (:font-size db)))
+
+(main/r-sub :max-string-width [s] [string-width [:string-width (s/replace s #"[0-9]" "0")]]
+            string-width)
+
+
 (defn clock []
-  (let [duration                 @(rf/subscribe [:get :duration])
-        passed-time              @(rf/subscribe [:get :passed-time])
-        remaining-time-precise   (- duration passed-time)
-        remaining-time           (js/Math.ceil remaining-time-precise)
-        progress-duration        (max 0 duration)
-        progress                 (min 1.0 (if (zero? progress-duration) 1.0 (/ passed-time progress-duration)))
-        color                    (condp < progress
-                                   0.98 alarm-red
-                                   0.9  raspberrysmoothie-pink
-                                   0.5  sonnengruss-yellow
-                                   machtfit-green)
-        mins                     (int (/ (Math/abs remaining-time) 60))
-        secs                     (int (rem (Math/abs remaining-time) 60))
-        font-size                25
+  (let [
+        duration @(rf/subscribe [:get :duration])
+
+        passed-time @(rf/subscribe [:get :passed-time])
+
+        remaining-time-precise (- duration passed-time)
+        remaining-time         (js/Math.ceil remaining-time-precise)
+        ;;--- duration, passed-time
+
+        progress-duration (max 0 duration)
+        progress          (min 1.0 (if (zero? progress-duration) 1.0 (/ passed-time progress-duration)))
+        color             (condp < progress
+                            0.98 alarm-red
+                            0.9  raspberrysmoothie-pink
+                            0.5  sonnengruss-yellow
+                            machtfit-green)
+        ;;--- duration, passed-time
+
+        mins (int (/ (Math/abs remaining-time) 60))
+        secs (int (rem (Math/abs remaining-time) 60))
+        ;;--- remaining-time
+
+        font-size @(rf/subscribe [:get :font-size])
+
         remaining-time-str-left  (when remaining-time
                                    (str (when (neg? remaining-time) "-") (gstring/format "%d" mins)))
         remaining-time-str-right (when remaining-time (gstring/format "%02d" secs))
-        left-width               (get-max-width remaining-time-str-left font-size)
-        right-width              (get-max-width remaining-time-str-right font-size)
-        total-width              (get-max-width (str remaining-time-str-left ":" remaining-time-str-right) font-size)
-        colon-width              (get-string-width ":" font-size)
-        middle-width             (- total-width left-width right-width)
-        colon-spacing            (inc (/ colon-width 2))
-        colon-offset             (+ (- left-width (/ total-width  2))
-                                    (/ middle-width 2))
-        radius                   40
-        angle                    (* 360 progress)
-        shape-function           (partial arc-point radius (- remaining-time-precise 5))
-        clock-shape-points       (vec (map shape-function (range 0 360.0001 1)))
-        clock-shape              (cmr/catmullrom clock-shape-points)
-        arc-points               (vec (map shape-function (concat (range 0 angle 1) [angle])))
-        arc-curve                (cmr/catmullrom arc-points)]
+
+        left-width  @(rf/subscribe [:machtfit/max-string-width remaining-time-str-left])
+        right-width @(rf/subscribe [:machtfit/max-string-width remaining-time-str-right])
+
+        total-width @(rf/subscribe [:machtfit/max-string-width (str remaining-time-str-left ":" remaining-time-str-right)])
+
+        colon-width @(rf/subscribe [:machtfit/string-width ":"])
+
+        middle-width  (- total-width left-width right-width)
+        colon-spacing (inc (/ colon-width 2))
+        colon-offset  (+ (- left-width (/ total-width  2))
+                         (/ middle-width 2))
+        radius        40
+        angle         (* 360 progress)
+
+        shape-function     (partial arc-point radius (- remaining-time-precise 5))
+        clock-shape-points (vec (map shape-function (range 0 360.0001 1)))
+        clock-shape        (cmr/catmullrom clock-shape-points)
+        arc-points         (vec (map shape-function (concat (range 0 angle 1) [angle])))
+        arc-curve          (cmr/catmullrom arc-points)]
     [:g.no-select {:transform "translate(50, 50)"
                    :on-click  #(rf/dispatch [:toggle])
                    :style     {:cursor "pointer"}}
