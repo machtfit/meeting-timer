@@ -4,7 +4,8 @@
             [goog.string :as gstring]
             [goog.string.format]  ;; required for release build
             [re-frame.core :as rf]
-            [reagent.core :as r]))
+            [reagent.core :as r])
+  (:require-macros [machtfit.meeting-timer.main :as main]))
 
 (defn timestamp []
   (/ (.now js/Date) 1000.0))
