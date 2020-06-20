@@ -132,11 +132,6 @@
 (defn get-max-width [text font-size]
   (get-string-width (s/replace text #"[0-9]" "0") font-size))
 
-(defn integer-field [key]
-  [:input {:type      "input"
-           :value     @(rf/subscribe [:get key])
-           :on-change (fn [e] (rf/dispatch [:set key (int (-> e .-target .-value))]))}])
-
 (defn figure-eight [r amplitude speed]
   (let [t (* r speed)]
     [(* amplitude (Math/cos t))
