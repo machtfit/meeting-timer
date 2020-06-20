@@ -1,6 +1,7 @@
 node_modules/
 .shadow-cljs
 .DS_Store
+yarn.lock
 
 release
 /**/generated/**/*
