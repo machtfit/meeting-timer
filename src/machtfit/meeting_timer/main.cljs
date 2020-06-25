@@ -4,7 +4,8 @@
             [goog.string :as gstring]
             [goog.string.format]  ;; required for release build
             [re-frame.core :as rf]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [taoensso.tufte :as tufte]))
 
 (defn timestamp []
   (/ (.now js/Date) 1000.0))
@@ -20,11 +21,23 @@
 
 (def granularity 30)
 
+(defonce stats-accumulator (tufte/add-accumulating-handler! {:ns-pattern "*"}))
+
+(defn display-profiler-stats []
+  (when-let [m (not-empty @stats-accumulator)]
+    (js/console.log (tufte/format-grouped-pstats
+                     m
+                     {:format-pstats-opts {:columns [:n-calls :p95 :mean :clock :total]}}))))
+
 (rf/reg-event-db
  :initialize-db
  (fn [db [_ initial-time]]
+   (when-let [profile-timer (:profile-timer db)]
+     (js/clearInterval profile-timer))
    (merge {:duration (or initial-time 300)
-           :running? false} db)))
+           :running? false}
+          db
+          {:profile-timer (js/setInterval display-profiler-stats 5000)})))
 
 (rf/reg-event-db
  :set
@@ -143,92 +156,100 @@
      (* amplitude (Math/cos t) (Math/sin t))]))
 
 (defn arc-point [radius remaining-time angle]
-  (let [angle-rad           (* (- angle 90) (/ Math/PI 180.0))
-        overtime-max        -30
-        clamped-time        (max remaining-time overtime-max)
-        reshape?            (neg? remaining-time)
-        amplitude           (* 10 (/ clamped-time overtime-max) (Math/sin remaining-time))
-        speed               (* 5 (/ clamped-time overtime-max))
-        jerk-amplitude      (* 5 (/ clamped-time overtime-max))
-        jerk-speed          (* 7 (/ clamped-time overtime-max))
-        effective-radius    (if reshape?
-                              (+ radius (* amplitude (Math/sin (+ (* 7 angle-rad) (* speed remaining-time)))))
-                              radius)
-        [offset-x offset-y] (if reshape?
-                              (figure-eight remaining-time jerk-amplitude jerk-speed)
-                              [0 0])]
-    {:x     (+ (* effective-radius (Math/cos angle-rad)) offset-x)
-     :y     (+ (* effective-radius (Math/sin angle-rad)) offset-y)
-     :angle angle-rad
-     :d     1}))
+  (tufte/profile
+   {:id :clock}
+   (tufte/p
+    {:id :arc-point}
+    (let [angle-rad           (* (- angle 90) (/ Math/PI 180.0))
+          overtime-max        -30
+          clamped-time        (max remaining-time overtime-max)
+          reshape?            (neg? remaining-time)
+          amplitude           (* 10 (/ clamped-time overtime-max) (Math/sin remaining-time))
+          speed               (* 5 (/ clamped-time overtime-max))
+          jerk-amplitude      (* 5 (/ clamped-time overtime-max))
+          jerk-speed          (* 7 (/ clamped-time overtime-max))
+          effective-radius    (if reshape?
+                                (+ radius (* amplitude (Math/sin (+ (* 7 angle-rad) (* speed remaining-time)))))
+                                radius)
+          [offset-x offset-y] (if reshape?
+                                (figure-eight remaining-time jerk-amplitude jerk-speed)
+                                [0 0])]
+      {:x     (+ (* effective-radius (Math/cos angle-rad)) offset-x)
+       :y     (+ (* effective-radius (Math/sin angle-rad)) offset-y)
+       :angle angle-rad
+       :d     1}))))
 
 (defn clock []
-  (let [duration                 @(rf/subscribe [:get :duration])
-        passed-time              @(rf/subscribe [:get :passed-time])
-        remaining-time-precise   (- duration passed-time)
-        remaining-time           (js/Math.ceil remaining-time-precise)
-        progress-duration        (max 0 duration)
-        progress                 (min 1.0 (if (zero? progress-duration) 1.0 (/ passed-time progress-duration)))
-        color                    (condp < progress
-                                   0.98 alarm-red
-                                   0.9  raspberrysmoothie-pink
-                                   0.5  sonnengruss-yellow
-                                   machtfit-green)
-        mins                     (int (/ (Math/abs remaining-time) 60))
-        secs                     (int (rem (Math/abs remaining-time) 60))
-        font-size                25
-        remaining-time-str-left  (when remaining-time
-                                   (str (when (neg? remaining-time) "-") (gstring/format "%d" mins)))
-        remaining-time-str-right (when remaining-time (gstring/format "%02d" secs))
-        left-width               (get-max-width remaining-time-str-left font-size)
-        right-width              (get-max-width remaining-time-str-right font-size)
-        total-width              (get-max-width (str remaining-time-str-left ":" remaining-time-str-right) font-size)
-        colon-width              (get-string-width ":" font-size)
-        middle-width             (- total-width left-width right-width)
-        colon-spacing            (inc (/ colon-width 2))
-        colon-offset             (+ (- left-width (/ total-width  2))
-                                    (/ middle-width 2))
-        radius                   40
-        angle                    (* 360 progress)
-        shape-function           (partial arc-point radius (- remaining-time-precise 5))
-        clock-shape-points       (vec (map shape-function (range 0 360.0001 1)))
-        clock-shape              (cmr/catmullrom clock-shape-points)
-        arc-points               (vec (map shape-function (concat (range 0 angle 1) [angle])))
-        arc-curve                (cmr/catmullrom arc-points)]
-    [:g.no-select {:transform "translate(50, 50)"
-                   :on-click  #(rf/dispatch [:toggle])
-                   :style     {:cursor "pointer"}}
-     [:path {:d     (cmr/curve->svg-closed-path clock-shape)
-             :style {:fill   aquafit-blue
-                     :stroke "none"}}]
-     (when (and passed-time (> (count arc-points) 1))
-       [:path {:d     (s/join " " (map str ["M" 0 (- radius) (cmr/curve->svg-path arc-curve) "L" 0 0 "Z"]))
-               :style {:stroke     "none"
-                       :fill       color
-                       :transition "fill 1s"}}])
-     (when remaining-time
-       [:g
-        [:text {:x           (- colon-offset colon-spacing)
-                :y           6
-                :text-anchor "end"
-                :style       {:fill      zen-white
-                              :stroke    "none"
-                              :font-size font-size}}
-         remaining-time-str-left]
-        [:text {:x           colon-offset
-                :y           6
-                :text-anchor "middle"
-                :style       {:fill      zen-white
-                              :stroke    "none"
-                              :font-size font-size}}
-         ":"]
-        [:text {:x           (+ colon-offset colon-spacing)
-                :y           6
-                :text-anchor "start"
-                :style       {:fill      zen-white
-                              :stroke    "none"
-                              :font-size font-size}}
-         remaining-time-str-right]])]))
+  (tufte/profile
+   {:id :clock}
+   (tufte/p
+    {:id :clock}
+    (let [duration                 @(rf/subscribe [:get :duration])
+          passed-time              @(rf/subscribe [:get :passed-time])
+          remaining-time-precise   (- duration passed-time)
+          remaining-time           (js/Math.ceil remaining-time-precise)
+          progress-duration        (max 0 duration)
+          progress                 (min 1.0 (if (zero? progress-duration) 1.0 (/ passed-time progress-duration)))
+          color                    (condp < progress
+                                     0.98 alarm-red
+                                     0.9  raspberrysmoothie-pink
+                                     0.5  sonnengruss-yellow
+                                     machtfit-green)
+          mins                     (int (/ (Math/abs remaining-time) 60))
+          secs                     (int (rem (Math/abs remaining-time) 60))
+          font-size                25
+          remaining-time-str-left  (when remaining-time
+                                     (str (when (neg? remaining-time) "-") (gstring/format "%d" mins)))
+          remaining-time-str-right (when remaining-time (gstring/format "%02d" secs))
+          left-width               (get-max-width remaining-time-str-left font-size)
+          right-width              (get-max-width remaining-time-str-right font-size)
+          total-width              (get-max-width (str remaining-time-str-left ":" remaining-time-str-right) font-size)
+          colon-width              (get-string-width ":" font-size)
+          middle-width             (- total-width left-width right-width)
+          colon-spacing            (inc (/ colon-width 2))
+          colon-offset             (+ (- left-width (/ total-width  2))
+                                      (/ middle-width 2))
+          radius                   40
+          angle                    (* 360 progress)
+          shape-function           (partial arc-point radius (- remaining-time-precise 5))
+          clock-shape-points       (vec (map shape-function (range 0 360.0001 1)))
+          clock-shape              (cmr/catmullrom clock-shape-points)
+          arc-points               (vec (map shape-function (concat (range 0 angle 1) [angle])))
+          arc-curve                (cmr/catmullrom arc-points)]
+      [:g.no-select {:transform "translate(50, 50)"
+                     :on-click  #(rf/dispatch [:toggle])
+                     :style     {:cursor "pointer"}}
+       [:path {:d     (cmr/curve->svg-closed-path clock-shape)
+               :style {:fill   aquafit-blue
+                       :stroke "none"}}]
+       (when (and passed-time (> (count arc-points) 1))
+         [:path {:d     (s/join " " (map str ["M" 0 (- radius) (cmr/curve->svg-path arc-curve) "L" 0 0 "Z"]))
+                 :style {:stroke     "none"
+                         :fill       color
+                         :transition "fill 1s"}}])
+       (when remaining-time
+         [:g
+          [:text {:x           (- colon-offset colon-spacing)
+                  :y           6
+                  :text-anchor "end"
+                  :style       {:fill      zen-white
+                                :stroke    "none"
+                                :font-size font-size}}
+           remaining-time-str-left]
+          [:text {:x           colon-offset
+                  :y           6
+                  :text-anchor "middle"
+                  :style       {:fill      zen-white
+                                :stroke    "none"
+                                :font-size font-size}}
+           ":"]
+          [:text {:x           (+ colon-offset colon-spacing)
+                  :y           6
+                  :text-anchor "start"
+                  :style       {:fill      zen-white
+                                :stroke    "none"
+                                :font-size font-size}}
+           remaining-time-str-right]])]))))
 
 (defn adder-button [text duration]
   [:div.adder
