@@ -212,17 +212,18 @@
           radius                   40
           angle                    (* 360 progress)
           shape-function           (partial arc-point radius (- remaining-time-precise 5))
-          clock-shape-points       (vec (map shape-function (range 0 360.0001 1)))
-          clock-shape              (cmr/catmullrom clock-shape-points)
-          arc-points               (vec (map shape-function (concat (range 0 angle 1) [angle])))
-          arc-curve                (cmr/catmullrom arc-points)]
+          clock-shape-points       (vec (map shape-function (range 0 360.00001 20)))
+          clock-shape              (cmr/catmullrom clock-shape-points :closed? true)
+          arc-curve                (cmr/partial-curve clock-shape 0 (/ angle 360.0))]
       [:g.no-select {:transform "translate(50, 50)"
                      :on-click  #(rf/dispatch [:toggle])
                      :style     {:cursor "pointer"}}
-       [:path {:d     (cmr/curve->svg-closed-path clock-shape)
-               :style {:fill   aquafit-blue
-                       :stroke "none"}}]
-       (when (and passed-time (> (count arc-points) 1))
+       (when (< progress 1)
+         [:path {:d     (cmr/curve->svg-closed-path clock-shape)
+                 :style {:fill   aquafit-blue
+                         :stroke "none"}}])
+       (when (and passed-time
+                  (> angle 0))
          [:path {:d     (s/join " " (map str ["M" 0 (- radius) (cmr/curve->svg-path arc-curve) "L" 0 0 "Z"]))
                  :style {:stroke     "none"
                          :fill       color
