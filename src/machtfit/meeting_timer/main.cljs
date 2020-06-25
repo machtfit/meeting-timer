@@ -37,7 +37,7 @@
    (merge {:duration (or initial-time 300)
            :running? false}
           db
-          {:profile-timer (js/setInterval display-profiler-stats 5000)})))
+          #_{:profile-timer (js/setInterval display-profiler-stats 5000)})))
 
 (rf/reg-event-db
  :set
