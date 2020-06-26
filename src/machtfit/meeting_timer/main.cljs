@@ -19,6 +19,18 @@
 
                                         ; events
 
+(def font-size 25)
+
+(defn get-string-width [text font-size]
+  (let [element (js/document.getElementById "text-test")]
+    (set! (.. element -style -fontSize) font-size)
+    (set! (.. element -innerHTML) text)
+    (inc (.. element -clientWidth))))
+
+(defn measure-string-widths []
+  (rf/dispatch [:set :zero-width (get-string-width "0" font-size)])
+  (rf/dispatch [:set :colon-width (get-string-width ":" font-size)]))
+
 (def granularity 30)
 
 (defonce stats-accumulator (tufte/add-accumulating-handler! {:ns-pattern "*"}))
@@ -32,10 +44,13 @@
 (rf/reg-event-db
  :initialize-db
  (fn [db [_ initial-time]]
+   (js/setTimeout measure-string-widths 0)
    (when-let [profile-timer (:profile-timer db)]
      (js/clearInterval profile-timer))
-   (merge {:duration (or initial-time 300)
-           :running? false}
+   (merge {:duration    (or initial-time 300)
+           :running?    false
+           :zero-width  11
+           :colon-width 5}
           db
           #_{:profile-timer (js/setInterval display-profiler-stats 5000)})))
 
@@ -136,15 +151,6 @@
 (defonce zen-white "#ffffff")
 (defonce alarm-red "#d22")
 
-(defn get-string-width [text font-size]
-  (let [element (js/document.getElementById "text-test")]
-    (set! (.. element -style -fontSize) font-size)
-    (set! (.. element -innerHTML) text)
-    (inc (.. element -clientWidth))))
-
-(defn get-max-width [text font-size]
-  (get-string-width (s/replace text #"[0-9]" "0") font-size))
-
 (defn integer-field [key]
   [:input {:type      "input"
            :value     @(rf/subscribe [:get key])
@@ -184,37 +190,40 @@
    {:id :clock}
    (tufte/p
     {:id :clock}
-    (let [duration                 @(rf/subscribe [:get :duration])
-          passed-time              @(rf/subscribe [:get :passed-time])
-          remaining-time-precise   (- duration passed-time)
-          remaining-time           (js/Math.ceil remaining-time-precise)
-          progress-duration        (max 0 duration)
-          progress                 (min 1.0 (if (zero? progress-duration) 1.0 (/ passed-time progress-duration)))
-          color                    (condp < progress
-                                     0.98 alarm-red
-                                     0.9  raspberrysmoothie-pink
-                                     0.5  sonnengruss-yellow
-                                     machtfit-green)
-          mins                     (int (/ (Math/abs remaining-time) 60))
-          secs                     (int (rem (Math/abs remaining-time) 60))
-          font-size                25
-          remaining-time-str-left  (when remaining-time
-                                     (str (when (neg? remaining-time) "-") (gstring/format "%d" mins)))
-          remaining-time-str-right (when remaining-time (gstring/format "%02d" secs))
-          left-width               (get-max-width remaining-time-str-left font-size)
-          right-width              (get-max-width remaining-time-str-right font-size)
-          total-width              (get-max-width (str remaining-time-str-left ":" remaining-time-str-right) font-size)
-          colon-width              (get-string-width ":" font-size)
-          middle-width             (- total-width left-width right-width)
-          colon-spacing            (inc (/ colon-width 2))
-          colon-offset             (+ (- left-width (/ total-width  2))
-                                      (/ middle-width 2))
-          radius                   40
-          angle                    (* 360 progress)
-          shape-function           (partial arc-point radius (- remaining-time-precise 5))
-          clock-shape-points       (vec (map shape-function (range 0 360.00001 20)))
-          clock-shape              (cmr/catmullrom clock-shape-points :closed? true)
-          arc-curve                (cmr/partial-curve clock-shape 0 (/ angle 360.0))]
+    (let [duration                       @(rf/subscribe [:get :duration])
+          passed-time                    @(rf/subscribe [:get :passed-time])
+          remaining-time-precise         (- duration passed-time)
+          remaining-time                 (js/Math.ceil remaining-time-precise)
+          progress-duration              (max 0 duration)
+          progress                       (min 1.0 (if (zero? progress-duration) 1.0 (/ passed-time progress-duration)))
+          color                          (condp < progress
+                                           0.98 alarm-red
+                                           0.9  raspberrysmoothie-pink
+                                           0.5  sonnengruss-yellow
+                                           machtfit-green)
+          mins                           (int (/ (Math/abs remaining-time) 60))
+          secs                           (int (rem (Math/abs remaining-time) 60))
+          remaining-time-str-left-digits (gstring/format "%d" mins)
+          remaining-time-str-left        (when remaining-time
+                                           (str (when (neg? remaining-time) "-") remaining-time-str-left-digits))
+          remaining-time-str-right       (when remaining-time (gstring/format "%02d" secs))
+          zero-width                     @(rf/subscribe [:get :zero-width])
+          colon-width                    @(rf/subscribe [:get :colon-width])
+          left-width                     (* zero-width (count remaining-time-str-left-digits))
+          right-width                    (* zero-width 2)
+          middle-width                   colon-width
+          total-width                    (+ left-width
+                                            middle-width
+                                            right-width)
+          colon-spacing                  (inc (/ colon-width 2))
+          colon-offset                   (+ (- left-width (/ total-width  2))
+                                            (/ middle-width 2))
+          radius                         40
+          angle                          (* 360 progress)
+          shape-function                 (partial arc-point radius (- remaining-time-precise 5))
+          clock-shape-points             (vec (map shape-function (range 0 360.00001 20)))
+          clock-shape                    (cmr/catmullrom clock-shape-points :closed? true)
+          arc-curve                      (cmr/partial-curve clock-shape 0 (/ angle 360.0))]
       [:g.no-select {:transform "translate(50, 50)"
                      :on-click  #(rf/dispatch [:toggle])
                      :style     {:cursor "pointer"}}
