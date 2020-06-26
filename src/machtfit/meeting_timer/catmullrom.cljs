@@ -89,7 +89,7 @@
          (into {}))))
 
 (defn cubic-bezier-length [bezier-segment]
-  (let [steps  10
+  (let [steps  3
         ts     (map #(/ % steps) (range (inc steps)))
         points (map (partial interpolate-point-cubic bezier-segment) ts)]
     (->> points
@@ -106,7 +106,7 @@
     (interpolate-point-cubic (nth path-data leg-index) sub-progress)))
 
 (defn partial-bezier-curve [bezier-segment start end]
-  (let [steps  10
+  (let [steps  3
         ts     (map #(+ start (* (/ % steps) (- end start))) (range (inc steps)))
         points (map (partial interpolate-point-cubic bezier-segment) ts)]
     (catmullrom points)))
