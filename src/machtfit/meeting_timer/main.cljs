@@ -223,8 +223,8 @@
                  :style {:fill   aquafit-blue
                          :stroke "none"}}])
        (when (and passed-time
-                  (> angle 0))
-         [:path {:d     (s/join " " (map str ["M" 0 (- radius) (cmr/curve->svg-path arc-curve) "L" 0 0 "Z"]))
+                  (seq arc-curve))
+         [:path {:d     (s/join " " (map str [(cmr/curve->svg-path arc-curve) "L" 0 0 "Z"]))
                  :style {:stroke     "none"
                          :fill       color
                          :transition "fill 1s"}}])
