@@ -227,7 +227,8 @@
       [:g.no-select {:transform "translate(50, 50)"
                      :on-click  #(rf/dispatch [:toggle])
                      :style     {:cursor "pointer"}}
-       (when (< progress 1)
+       (when (or (not passed-time)
+                 (not= arc-curve clock-shape))
          [:path {:d     (cmr/curve->svg-closed-path clock-shape)
                  :style {:fill   aquafit-blue
                          :stroke "none"}}])
