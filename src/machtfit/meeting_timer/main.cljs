@@ -156,10 +156,10 @@
            :value     @(rf/subscribe [:get key])
            :on-change (fn [e] (rf/dispatch [:set key (int (-> e .-target .-value))]))}])
 
-(defn figure-eight [r amplitude speed]
+(defn wobble-position [r amplitude speed]
   (let [t (* r speed)]
-    [(* amplitude (Math/cos t))
-     (* amplitude (Math/cos t) (Math/sin t))]))
+    [(* amplitude (Math/cos (* 0.8 t)))
+     (* amplitude (Math/sin (* 0.7 t)))]))
 
 (defn arc-point [radius remaining-time angle]
   (tufte/profile
@@ -178,7 +178,7 @@
                                 (+ radius (* amplitude (Math/sin (+ (* 7 angle-rad) (* speed remaining-time)))))
                                 radius)
           [offset-x offset-y] (if reshape?
-                                (figure-eight remaining-time jerk-amplitude jerk-speed)
+                                (wobble-position remaining-time jerk-amplitude jerk-speed)
                                 [0 0])]
       {:x     (+ (* effective-radius (Math/cos angle-rad)) offset-x)
        :y     (+ (* effective-radius (Math/sin angle-rad)) offset-y)
