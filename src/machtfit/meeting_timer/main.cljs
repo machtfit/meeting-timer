@@ -82,7 +82,10 @@
 (rf/reg-event-db
  :toggle-controls
  (fn [db _]
-   (update db :hide-controls? not)))
+   (let [new-db (update db :hide-controls? not)]
+     (if (:hide-controls? new-db)
+       (assoc new-db :show-help? false)
+       new-db))))
 
 (rf/reg-event-db
  :toggle-help
@@ -385,8 +388,8 @@
                           :top      "1em"
                           :left     "1em"
                           :cursor   "pointer"}}
-         [key-display "?"]]
-        [help]]])))
+         [key-display "?"]]]
+       [help]])))
 
 (defn stop []
   (println "Stopping..."))
