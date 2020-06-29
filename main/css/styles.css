@@ -9,6 +9,7 @@ body {
   background-color: #fff;
   color: #122020;
   font-family: "Cera", sans-serif;
+  overflow: hidden;
 }
 
 .buttons {
