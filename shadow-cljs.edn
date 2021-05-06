@@ -9,7 +9,8 @@
                 [com.taoensso/tufte "2.1.0"]]
 
  :builds {:main {:target           :browser
-                 :modules          {:main {:entries [machtfit.meeting-timer.main]}}
+                 :modules          {:main {:init-fn machtfit.meeting-timer.main/init
+                                           :entries [machtfit.meeting-timer.main]}}
                  :output-dir       "main/js/generated"
                  :asset-path       "js/generated"
                  :devtools         {:before-load machtfit.meeting-timer.main/stop
