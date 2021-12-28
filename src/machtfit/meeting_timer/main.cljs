@@ -12,9 +12,9 @@
                                         ; subs
 
 (rf/reg-sub
- :get
- (fn [db [_ key]]
-   (key db)))
+  :get
+  (fn [db [_ key]]
+    (key db)))
 
                                         ; events
 
@@ -45,9 +45,9 @@
            db)))
 
 (rf/reg-event-db
- :set
- (fn [db [_ key value]]
-   (assoc db key value)))
+  :set
+  (fn [db [_ key value]]
+    (assoc db key value)))
 
 (defn change-url [duration]
   (let [duration-str (if (zero? (mod duration 60))
@@ -56,31 +56,31 @@
     (js/history.pushState #js{} nil (str ".?t=" duration-str))))
 
 (rf/reg-event-db
- :set-duration
- (fn [db [_ value]]
-   (let [new-db (assoc db :duration value)]
-     (change-url (:duration new-db))
-     new-db)))
+  :set-duration
+  (fn [db [_ value]]
+    (let [new-db (assoc db :duration value)]
+      (change-url (:duration new-db))
+      new-db)))
 
 (rf/reg-event-db
- :add-to-total-duration
- (fn [db [_ value]]
-   (let [new-db (update db :duration + value)]
-     (change-url (:duration new-db))
-     new-db)))
+  :add-to-total-duration
+  (fn [db [_ value]]
+    (let [new-db (update db :duration + value)]
+      (change-url (:duration new-db))
+      new-db)))
 
 (rf/reg-event-db
- :toggle-controls
- (fn [db _]
-   (let [new-db (update db :hide-controls? not)]
-     (if (:hide-controls? new-db)
-       (assoc new-db :show-help? false)
-       new-db))))
+  :toggle-controls
+  (fn [db _]
+    (let [new-db (update db :hide-controls? not)]
+      (if (:hide-controls? new-db)
+        (assoc new-db :show-help? false)
+        new-db))))
 
 (rf/reg-event-db
- :toggle-help
- (fn [db _]
-   (update db :show-help? not)))
+  :toggle-help
+  (fn [db _]
+    (update db :show-help? not)))
 
 (defn stop-interval [db]
   (let [previous-timer (:interval-timer db)]
@@ -94,46 +94,46 @@
       (assoc :interval-timer (js/setInterval #(rf/dispatch [:tick]) granularity))))
 
 (rf/reg-event-db
- :resume
- (fn [db _]
-   (-> db
-       (assoc :running? true)
-       (set-interval))))
+  :resume
+  (fn [db _]
+    (-> db
+        (assoc :running? true)
+        (set-interval))))
 
 (rf/reg-event-db
- :pause
- (fn [db _]
-   (-> db
-       (assoc :running? false)
-       (stop-interval))))
+  :pause
+  (fn [db _]
+    (-> db
+        (assoc :running? false)
+        (stop-interval))))
 
 (rf/reg-event-db
- :toggle
- (fn [db _]
-   (if (:running? db)
-     (rf/dispatch [:pause])
-     (rf/dispatch [:resume]))
-   db))
+  :toggle
+  (fn [db _]
+    (if (:running? db)
+      (rf/dispatch [:pause])
+      (rf/dispatch [:resume]))
+    db))
 
 (rf/reg-event-db
- :reset
- (fn [db _]
-   (-> db
-       (assoc :running? false)
-       (assoc :passed-time 0)
-       (stop-interval))))
+  :reset
+  (fn [db _]
+    (-> db
+        (assoc :running? false)
+        (assoc :passed-time 0)
+        (stop-interval))))
 
 (rf/reg-event-db
- :tick
- (fn [db _]
-   (let [last-tick (:last-tick db)
-         now       (timestamp)
-         diff      (if last-tick
-                     (- now last-tick)
-                     0)]
-     (-> db
-         (update :passed-time + diff)
-         (assoc :last-tick now)))))
+  :tick
+  (fn [db _]
+    (let [last-tick (:last-tick db)
+          now       (timestamp)
+          diff      (if last-tick
+                      (- now last-tick)
+                      0)]
+      (-> db
+          (update :passed-time + diff)
+          (assoc :last-tick now)))))
 
                                         ; views
 (defonce aquafit-blue "#008ca0")
