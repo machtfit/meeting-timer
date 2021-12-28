@@ -12,7 +12,6 @@
   "dependencies": {
     "highlight.js": "9.15.10",
     "react": "17.0.2",
-    "react-dom": "17.0.2",
-    "react-highlight.js": "1.0.7"
+    "react-dom": "17.0.2"
   }
 }
