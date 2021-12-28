@@ -5,8 +5,7 @@
                 [re-frame "0.11.0"]
                 [day8.re-frame/re-frame-10x "0.5.2"]
                 [cljs-node-io "1.1.2"]
-                [binaryage/devtools "0.9.10"]
-                [com.taoensso/tufte "2.1.0"]]
+                [binaryage/devtools "0.9.10"]]
 
  :builds {:main {:target           :browser
                  :modules          {:main {:init-fn machtfit.meeting-timer.main/init
@@ -20,4 +19,3 @@
                                     :preloads    [devtools.preload
                                                   day8.re-frame-10x.preload]}
                  :compiler-options {:closure-defines {re-frame.trace.trace-enabled? true}}}}}
-
