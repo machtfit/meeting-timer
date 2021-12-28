@@ -4,7 +4,7 @@
             [goog.string.format]  ;; required for release build
             [machtfit.meeting-timer.catmullrom :as cmr]
             [re-frame.core :as rf]
-            [reagent.core :as r]))
+            [reagent.dom :as r-dom]))
 
 (defn timestamp []
   (/ (.now js/Date) 1000.0))
@@ -390,8 +390,8 @@
         time-str     (.get get-params "t")
         initial-time (parse-time-str time-str)]
     (rf/dispatch-sync [:initialize-db initial-time]))
-  (r/render [app]
-            (.getElementById js/document "app")))
+  (r-dom/render [app]
+                (.getElementById js/document "app")))
 
 (defn ^:export init []
   (start))
