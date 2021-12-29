@@ -17,6 +17,8 @@
 (def font-size 25)
 (def ticks-per-second 20)
 
+(def radius 40)
+
 (defn timestamp []
   (/ (.now js/Date) 1000.0))
 
@@ -237,7 +239,7 @@
     [(* amplitude (Math/cos (* 0.8 t)))
      (* amplitude (Math/sin (* 0.7 t)))]))
 
-(defn arc-point [radius remaining-time angle]
+(defn arc-point-wobble [remaining-time angle]
   (let [angle-rad           (* (- angle 90) (/ Math/PI 180.0))
         overtime-max        -30
         clamped-time        (max remaining-time overtime-max)
@@ -252,10 +254,13 @@
         [offset-x offset-y] (if reshape?
                               (wobble-position remaining-time jerk-amplitude jerk-speed)
                               [0 0])]
-    {:x     (+ (* effective-radius (Math/cos angle-rad)) offset-x)
-     :y     (+ (* effective-radius (Math/sin angle-rad)) offset-y)
-     :angle angle-rad
-     :d     1}))
+    {:x (+ (* effective-radius (Math/cos angle-rad)) offset-x)
+     :y (+ (* effective-radius (Math/sin angle-rad)) offset-y)}))
+
+(defn arc-point-default [angle]
+  (let [angle-rad (* (- angle 90) (/ Math/PI 180.0))]
+    {:x (* radius (Math/cos angle-rad))
+     :y (* radius (Math/sin angle-rad))}))
 
 (defn time-string []
   (when-let [[time-left time-right] @(rf/subscribe [:remaining-time-string-parts])]
@@ -284,14 +289,23 @@
         time-right]])))
 
 (rf/reg-sub
-  :clock-base-shape
+  :clock-base-shape-arc-function
   (fn [_ _]
     (rf/subscribe [:remaining-time]))
 
   (fn [remaining-time _]
-    (let [radius             40
-          shape-function     (partial arc-point radius (- remaining-time 5))
-          clock-shape-points (mapv shape-function (range 0 360.00001 20))]
+    (let [wobble-time (- remaining-time 5)]
+      (if (neg? wobble-time)
+        (partial arc-point-wobble wobble-time)
+        arc-point-default))))
+
+(rf/reg-sub
+  :clock-base-shape
+  (fn [_ _]
+    (rf/subscribe [:clock-base-shape-arc-function]))
+
+  (fn [shape-function _]
+    (let [clock-shape-points (mapv shape-function (range 0 361 20))]
       (cmr/catmullrom clock-shape-points :closed? true))))
 
 (rf/reg-sub
