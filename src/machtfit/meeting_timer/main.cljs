@@ -71,6 +71,22 @@
         [left right]))))
 
 (rf/reg-sub
+  :show-clock-base-shape?
+  (fn [_ _]
+    (rf/subscribe [:progress]))
+
+  (fn [progress _]
+    (< progress 1)))
+
+(rf/reg-sub
+  :show-clock-progress-shape?
+  (fn [_ _]
+    (rf/subscribe [:progress]))
+
+  (fn [progress _]
+    (pos? progress)))
+
+(rf/reg-sub
   :colon-spacing-data
   (fn [_ _]
     [(rf/subscribe [:get :zero-width])
@@ -317,7 +333,7 @@
     (cmr/curve->svg-closed-path clock-base-shape)))
 
 (defn clock-base-shape []
-  (when-not (neg? @(rf/subscribe [:remaining-time]))
+  (when @(rf/subscribe [:show-clock-base-shape?])
     [:path {:d     @(rf/subscribe [:clock-base-path])
             :style {:fill   aquafit-blue
                     :stroke "none"}}]))
@@ -340,7 +356,7 @@
     (s/join " " (map str [(cmr/curve->svg-path clock-progress-shape) "L" 0 0 "Z"]))))
 
 (defn clock-progress-shape []
-  (when (pos? @(rf/subscribe [:progress]))
+  (when @(rf/subscribe [:show-clock-progress-shape?])
     [:path {:d     @(rf/subscribe [:clock-progress-path])
             :style {:stroke     "none"
                     :fill       @(rf/subscribe [:progress-color])
