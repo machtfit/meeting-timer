@@ -6,6 +6,17 @@
             [re-frame.core :as rf]
             [reagent.dom :as r-dom]))
 
+(defonce aquafit-blue "#008ca0")
+(defonce machtfit-green "#34b78f")
+(defonce sonnengruss-yellow "#fbd872")
+(defonce raspberrysmoothie-pink "#e62e73")
+(defonce night-black "#122020")
+(defonce zen-white "#ffffff")
+(defonce alarm-red "#d22")
+
+(def font-size 25)
+(def granularity 30)
+
 (defn timestamp []
   (/ (.now js/Date) 1000.0))
 
@@ -16,9 +27,90 @@
   (fn [db [_ key]]
     (key db)))
 
-                                        ; events
+(rf/reg-sub
+  :colon-width
+  (fn [_ _]
+    (rf/subscribe [:get :colon-width]))
 
-(def font-size 25)
+  (fn [colon-width _]
+    colon-width))
+
+(rf/reg-sub
+  :remaining-time
+  (fn [_ _]
+    [(rf/subscribe [:get :duration])
+     (rf/subscribe [:get :passed-time])])
+
+  (fn [[duration passed-time] _]
+    (- duration passed-time)))
+
+(rf/reg-sub
+  :remaining-seconds
+  (fn [_ _]
+    (rf/subscribe [:remaining-time]))
+
+  (fn [remaining-time _]
+    (some-> remaining-time Math/ceil)))
+
+(rf/reg-sub
+  :remaining-time-string-parts
+  (fn [_ _]
+    (rf/subscribe [:remaining-seconds]))
+
+  (fn [remaining-seconds _]
+    (when remaining-seconds
+      (let [absolute-remaining-seconds (Math/abs remaining-seconds)
+            mins                       (int (/ absolute-remaining-seconds 60))
+            secs                       (int (rem absolute-remaining-seconds 60))
+            left-digits                (gstring/format "%d" mins)
+            left                       (str (when (neg? remaining-seconds) "-")
+                                            left-digits)
+            right                      (gstring/format "%02d" secs)]
+        [left right]))))
+
+(rf/reg-sub
+  :colon-spacing-data
+  (fn [_ _]
+    [(rf/subscribe [:get :zero-width])
+     (rf/subscribe [:get :colon-width])
+     (rf/subscribe [:remaining-time-string-parts])])
+
+  (fn [[zero-width colon-width [time-left _]] _]
+    (let [left-width    (* zero-width (count time-left))
+          right-width   (* zero-width 2)
+          middle-width  colon-width
+          total-width   (+ left-width
+                           middle-width
+                           right-width)
+          colon-spacing (inc (/ colon-width 2))
+          colon-offset  (+ (- left-width (/ total-width  2))
+                           (/ middle-width 2))]
+      [colon-offset colon-spacing])))
+
+(rf/reg-sub
+  :progress
+  (fn [_ _]
+    [(rf/subscribe [:get :duration])
+     (rf/subscribe [:get :passed-time])])
+
+  (fn [[duration passed-time] _]
+    (let [progress-duration (max 0 duration)]
+      (min 1.0 (if (zero? progress-duration)
+                 1.0
+                 (/ passed-time progress-duration))))))
+
+(rf/reg-sub
+  :progress-color
+  (fn [_ _]
+    (rf/subscribe [:progress]))
+
+  (fn [progress _]
+    (condp < progress
+      0.98 alarm-red
+      0.9  raspberrysmoothie-pink
+      0.5  sonnengruss-yellow
+      machtfit-green)))
+                                        ; events
 
 (defn get-string-width [text font-size]
   (let [element (js/document.getElementById "text-test")]
@@ -29,8 +121,6 @@
 (defn measure-string-widths []
   (rf/dispatch [:set :zero-width (get-string-width "0" font-size)])
   (rf/dispatch [:set :colon-width (get-string-width ":" font-size)]))
-
-(def granularity 30)
 
 (rf/reg-event-db
   :initialize-db
@@ -136,13 +226,6 @@
           (assoc :last-tick now)))))
 
                                         ; views
-(defonce aquafit-blue "#008ca0")
-(defonce machtfit-green "#34b78f")
-(defonce sonnengruss-yellow "#fbd872")
-(defonce raspberrysmoothie-pink "#e62e73")
-(defonce night-black "#122020")
-(defonce zen-white "#ffffff")
-(defonce alarm-red "#d22")
 
 (defn integer-field [key]
   [:input {:type      "input"
@@ -174,78 +257,88 @@
      :angle angle-rad
      :d     1}))
 
+(defn time-string []
+  (when-let [[time-left time-right] @(rf/subscribe [:remaining-time-string-parts])]
+    (let [[colon-offset colon-spacing] @(rf/subscribe [:colon-spacing-data])]
+      [:g
+       [:text {:x           (- colon-offset colon-spacing)
+               :y           6
+               :text-anchor "end"
+               :style       {:fill      zen-white
+                             :stroke    "none"
+                             :font-size font-size}}
+        time-left]
+       [:text {:x           colon-offset
+               :y           6
+               :text-anchor "middle"
+               :style       {:fill      zen-white
+                             :stroke    "none"
+                             :font-size font-size}}
+        ":"]
+       [:text {:x           (+ colon-offset colon-spacing)
+               :y           6
+               :text-anchor "start"
+               :style       {:fill      zen-white
+                             :stroke    "none"
+                             :font-size font-size}}
+        time-right]])))
+
+(rf/reg-sub
+  :clock-base-shape
+  (fn [_ _]
+    (rf/subscribe [:remaining-time]))
+
+  (fn [remaining-time _]
+    (let [radius             40
+          shape-function     (partial arc-point radius (- remaining-time 5))
+          clock-shape-points (mapv shape-function (range 0 360.00001 20))]
+      (cmr/catmullrom clock-shape-points :closed? true))))
+
+(rf/reg-sub
+  :clock-base-path
+  (fn [_ _]
+    (rf/subscribe [:clock-base-shape]))
+
+  (fn [clock-base-shape _]
+    (cmr/curve->svg-closed-path clock-base-shape)))
+
+(defn clock-base-shape []
+  (when-not (neg? @(rf/subscribe [:remaining-time]))
+    [:path {:d     @(rf/subscribe [:clock-base-path])
+            :style {:fill   aquafit-blue
+                    :stroke "none"}}]))
+
+(rf/reg-sub
+  :clock-progress-shape
+  (fn [_ _]
+    [(rf/subscribe [:clock-base-shape])
+     (rf/subscribe [:progress])])
+
+  (fn [[clock-shape progress] _]
+    (cmr/partial-curve clock-shape 0 progress)))
+
+(rf/reg-sub
+  :clock-progress-path
+  (fn [_ _]
+    (rf/subscribe [:clock-progress-shape]))
+
+  (fn [clock-progress-shape _]
+    (s/join " " (map str [(cmr/curve->svg-path clock-progress-shape) "L" 0 0 "Z"]))))
+
+(defn clock-progress-shape []
+  (when (pos? @(rf/subscribe [:progress]))
+    [:path {:d     @(rf/subscribe [:clock-progress-path])
+            :style {:stroke     "none"
+                    :fill       @(rf/subscribe [:progress-color])
+                    :transition "fill 1s"}}]))
+
 (defn clock []
-  (let [duration                       @(rf/subscribe [:get :duration])
-        passed-time                    @(rf/subscribe [:get :passed-time])
-        remaining-time-precise         (- duration passed-time)
-        remaining-time                 (js/Math.ceil remaining-time-precise)
-        progress-duration              (max 0 duration)
-        progress                       (min 1.0 (if (zero? progress-duration) 1.0 (/ passed-time progress-duration)))
-        color                          (condp < progress
-                                         0.98 alarm-red
-                                         0.9  raspberrysmoothie-pink
-                                         0.5  sonnengruss-yellow
-                                         machtfit-green)
-        mins                           (int (/ (Math/abs remaining-time) 60))
-        secs                           (int (rem (Math/abs remaining-time) 60))
-        remaining-time-str-left-digits (gstring/format "%d" mins)
-        remaining-time-str-left        (when remaining-time
-                                         (str (when (neg? remaining-time) "-") remaining-time-str-left-digits))
-        remaining-time-str-right       (when remaining-time (gstring/format "%02d" secs))
-        zero-width                     @(rf/subscribe [:get :zero-width])
-        colon-width                    @(rf/subscribe [:get :colon-width])
-        left-width                     (* zero-width (count remaining-time-str-left-digits))
-        right-width                    (* zero-width 2)
-        middle-width                   colon-width
-        total-width                    (+ left-width
-                                          middle-width
-                                          right-width)
-        colon-spacing                  (inc (/ colon-width 2))
-        colon-offset                   (+ (- left-width (/ total-width  2))
-                                          (/ middle-width 2))
-        radius                         40
-        angle                          (* 360 progress)
-        shape-function                 (partial arc-point radius (- remaining-time-precise 5))
-        clock-shape-points             (vec (map shape-function (range 0 360.00001 20)))
-        clock-shape                    (cmr/catmullrom clock-shape-points :closed? true)
-        arc-curve                      (cmr/partial-curve clock-shape 0 (/ angle 360.0))]
-    [:g.no-select {:transform "translate(50, 50)"
-                   :on-click  #(rf/dispatch [:toggle])
-                   :style     {:cursor "pointer"}}
-     (when (or (not passed-time)
-               (not= arc-curve clock-shape))
-       [:path {:d     (cmr/curve->svg-closed-path clock-shape)
-               :style {:fill   aquafit-blue
-                       :stroke "none"}}])
-     (when (and passed-time
-                (seq arc-curve))
-       [:path {:d     (s/join " " (map str [(cmr/curve->svg-path arc-curve) "L" 0 0 "Z"]))
-               :style {:stroke     "none"
-                       :fill       color
-                       :transition "fill 1s"}}])
-     (when remaining-time
-       [:g
-        [:text {:x           (- colon-offset colon-spacing)
-                :y           6
-                :text-anchor "end"
-                :style       {:fill      zen-white
-                              :stroke    "none"
-                              :font-size font-size}}
-         remaining-time-str-left]
-        [:text {:x           colon-offset
-                :y           6
-                :text-anchor "middle"
-                :style       {:fill      zen-white
-                              :stroke    "none"
-                              :font-size font-size}}
-         ":"]
-        [:text {:x           (+ colon-offset colon-spacing)
-                :y           6
-                :text-anchor "start"
-                :style       {:fill      zen-white
-                              :stroke    "none"
-                              :font-size font-size}}
-         remaining-time-str-right]])]))
+  [:g.no-select {:transform "translate(50, 50)"
+                 :on-click  #(rf/dispatch [:toggle])
+                 :style     {:cursor "pointer"}}
+   [clock-base-shape]
+   [clock-progress-shape]
+   [time-string]])
 
 (defn adder-button [text duration]
   [:div.adder
@@ -341,12 +434,30 @@
       (= key-char "0")                   (rf/dispatch [:set-duration 0])
       (s/includes? "123456789" key-char) (rf/dispatch [:add-to-total-duration (* (js/parseInt key-char) 60)]))))
 
+(defn controls []
+  (let [hide-controls? @(rf/subscribe [:get :hide-controls?])
+        controls-style {:transition     "opacity 1s"
+                        :opacity        (if hide-controls? 0 1)
+                        :pointer-events (when hide-controls? "none")}]
+    [:<>
+     [:div {:style controls-style}
+      [:div {:on-click #(rf/dispatch [:toggle-help])
+             :style    {:position "absolute"
+                        :top      "1em"
+                        :left     "1em"
+                        :cursor   "pointer"}}
+         [key-display "?"]]]
+
+     [:div.buttons {:style controls-style}
+      [adder-button "10s" 10]
+      [adder-button "1m" 60]
+      [adder-button "5m" 300]
+      [reset-button]
+      [start-button]]]))
+
 (defn app []
   (set! (.-onkeypress js/window) on-key-press)
   (fn []
-    (let [hide-controls? @(rf/subscribe [:get :hide-controls?])
-          controls-style {:transition "opacity 1s"
-                          :opacity    (if hide-controls? 0 1)}]
       [:div
        {:style {:width "100%"}}
        [:svg {:style               {:width  "100%"
@@ -354,24 +465,12 @@
               :viewBox             "0 0 100 100"
               :preserveAspectRatio "xMidYMid meet"}
         [clock]]
-       [:div.buttons {:style controls-style}
-        [adder-button "10s" 10]
-        [adder-button "1m" 60]
-        [adder-button "5m" 300]
-        [reset-button]
-        [start-button]]
        [:div.logo
         [:a {:href   "https://www.machtfit.de/"
              :target "_blank"}
          [:img {:src "img/machtfit-logo.png"}]]]
-       [:div {:style controls-style}
-        [:div {:on-click #(rf/dispatch [:toggle-help])
-               :style    {:position "absolute"
-                          :top      "1em"
-                          :left     "1em"
-                          :cursor   "pointer"}}
-         [key-display "?"]]]
-       [help]])))
+       [controls]
+       [help]]))
 
 (defn stop []
   (println "Stopping..."))
