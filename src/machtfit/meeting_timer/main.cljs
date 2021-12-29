@@ -15,7 +15,7 @@
 (defonce alarm-red "#d22")
 
 (def font-size 25)
-(def granularity 30)
+(def ticks-per-second 20)
 
 (defn timestamp []
   (/ (.now js/Date) 1000.0))
@@ -181,7 +181,7 @@
   (-> db
       (stop-interval)
       (assoc :last-tick (timestamp))
-      (assoc :interval-timer (js/setInterval #(rf/dispatch [:tick]) granularity))))
+      (assoc :interval-timer (js/setInterval #(rf/dispatch [:tick]) (/ 1000 ticks-per-second)))))
 
 (rf/reg-event-db
   :resume
