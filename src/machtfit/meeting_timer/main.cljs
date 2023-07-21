@@ -497,9 +497,6 @@
      [controls]
      [help]]))
 
-(defn stop []
-  (println "Stopping..."))
-
 (defn parse-time-str [time-str]
   (let [[_ number-str unit] (re-find #"(-?\d+)([ms]?)" (or time-str ""))
         number (js/parseInt number-str)]
@@ -509,13 +506,10 @@
       "m" (* number 60)
       nil)))
 
-(defn start []
+(defn ^:export init []
   (let [get-params (js/URLSearchParams. js/window.location.search)
         time-str (.get get-params "t")
         initial-time (parse-time-str time-str)]
     (rf/dispatch-sync [:initialize-db initial-time]))
   (let [root (r/create-root (.getElementById js/document "app"))]
     (r/render root [app])))
-
-(defn ^:export init []
-  (start))
