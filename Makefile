@@ -1,7 +1,7 @@
 .PHONY: setup-dev dev release
 
 setup-dev:
-	yarn install
+	npm install
 
 dev:
 	npx shadow-cljs watch main
