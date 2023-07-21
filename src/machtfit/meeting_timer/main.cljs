@@ -480,6 +480,12 @@
       [reset-button]
       [start-button]]]))
 
+(defn logo []
+  [:div.logo
+   [:a {:href "https://www.machtfit.de/"
+        :target "_blank"}
+    [:img {:src "img/machtfit-logo.png"}]]])
+
 (defn app []
   (set! (.-onkeypress js/window) on-key-press)
   (fn []
@@ -490,12 +496,9 @@
             :viewBox "0 0 100 100"
             :preserveAspectRatio "xMidYMid meet"}
       [clock]]
-     [:div.logo
-      [:a {:href "https://www.machtfit.de/"
-           :target "_blank"}
-       [:img {:src "img/machtfit-logo.png"}]]]
      [controls]
-     [help]]))
+     [help]
+     [logo]]))
 
 (defn parse-time-str [time-str]
   (let [[_ number-str unit] (re-find #"(-?\d+)([ms]?)" (or time-str ""))
