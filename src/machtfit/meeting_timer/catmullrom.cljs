@@ -60,7 +60,7 @@
        (map (partial apply distance))))
 
 (defn find-leg-progress [leg-lengths progress]
-  (let [total-length      (apply + leg-lengths)
+  (let [total-length (apply + leg-lengths)
         adjusted-progress (* progress total-length)]
     (->> leg-lengths
          (map-indexed vector)
@@ -75,9 +75,9 @@
           [0 0 0]))))
 
 (defn interpolate-point-cubic [[p1 cp1 cp2 p2] t]
-  (let [t2  (* t t)
-        t3  (* t2 t)
-        tr  (- 1 t)
+  (let [t2 (* t t)
+        t3 (* t2 t)
+        tr (- 1 t)
         tr2 (* tr tr)
         tr3 (* tr2 tr)]
     (->> (range 2)
@@ -89,8 +89,8 @@
          (into {}))))
 
 (defn cubic-bezier-length [bezier-segment]
-  (let [steps  3
-        ts     (map #(/ % steps) (range (inc steps)))
+  (let [steps 3
+        ts (map #(/ % steps) (range (inc steps)))
         points (map (partial interpolate-point-cubic bezier-segment) ts)]
     (->> points
          (partition 2 1)
@@ -106,21 +106,21 @@
     (interpolate-point-cubic (nth path-data leg-index) sub-progress)))
 
 (defn partial-bezier-curve [bezier-segment start end]
-  (let [steps  3
-        ts     (map #(+ start (* (/ % steps) (- end start))) (range (inc steps)))
+  (let [steps 3
+        ts (map #(+ start (* (/ % steps) (- end start))) (range (inc steps)))
         points (map (partial interpolate-point-cubic bezier-segment) ts)]
     (catmullrom points)))
 
 (defn partial-curve [curve start end]
   (cond
     (<= start 0 1 end) curve
-    (<= end start)     []
+    (<= end start) []
     :else
-    (let [start                                  (max 0 start)
-          end                                    (min 1 end)
-          leg-lengths                            (curve->leg-lengths curve)
+    (let [start (max 0 start)
+          end (min 1 end)
+          leg-lengths (curve->leg-lengths curve)
           [start-leg-index start-sub-progress _] (find-leg-progress leg-lengths start)
-          [end-leg-index end-sub-progress _]     (find-leg-progress leg-lengths end)]
+          [end-leg-index end-sub-progress _] (find-leg-progress leg-lengths end)]
       (if (= start-leg-index end-leg-index)
         (partial-bezier-curve
          (nth curve start-leg-index)
@@ -129,20 +129,20 @@
         (-> []
             (cond->
 
-                (pos? start-sub-progress) (concat
-                                           (partial-bezier-curve
-                                            (nth curve start-leg-index)
-                                            start-sub-progress
-                                            1)
-                                           (when (< (inc start-leg-index) (count curve))
-                                             (subvec curve (inc start-leg-index) end-leg-index)))
-                (zero? start-sub-progress) (concat
-                                            (subvec curve start-leg-index end-leg-index))
-                (>= end-sub-progress 1)    (concat
-                                            [(last curve)])
-                (< end-sub-progress 1)     (concat
-                                            (partial-bezier-curve
-                                             (nth curve end-leg-index)
-                                             0
-                                             end-sub-progress)))
+              (pos? start-sub-progress) (concat
+                                         (partial-bezier-curve
+                                          (nth curve start-leg-index)
+                                          start-sub-progress
+                                          1)
+                                         (when (< (inc start-leg-index) (count curve))
+                                           (subvec curve (inc start-leg-index) end-leg-index)))
+              (zero? start-sub-progress) (concat
+                                          (subvec curve start-leg-index end-leg-index))
+              (>= end-sub-progress 1) (concat
+                                       [(last curve)])
+              (< end-sub-progress 1) (concat
+                                      (partial-bezier-curve
+                                       (nth curve end-leg-index)
+                                       0
+                                       end-sub-progress)))
             vec)))))
