@@ -4,7 +4,7 @@
             [goog.string.format] ;; required for release build
             [machtfit.meeting-timer.catmullrom :as cmr]
             [re-frame.core :as rf]
-            [reagent.dom :as r-dom]))
+            [reagent.dom.client :as r]))
 
 (defonce aquafit-blue "#008ca0")
 (defonce machtfit-green "#34b78f")
@@ -514,8 +514,8 @@
         time-str (.get get-params "t")
         initial-time (parse-time-str time-str)]
     (rf/dispatch-sync [:initialize-db initial-time]))
-  (r-dom/render [app]
-                (.getElementById js/document "app")))
+  (let [root (r/create-root (.getElementById js/document "app"))]
+    (r/render root [app])))
 
 (defn ^:export init []
   (start))
