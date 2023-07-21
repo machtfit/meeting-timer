@@ -352,10 +352,9 @@
 
 (defn clock-progress-shape []
   (when @(rf/subscribe [:show-clock-progress-shape?])
-    [:path {:d @(rf/subscribe [:clock-progress-path])
-            :style {:stroke "none"
-                    :fill @(rf/subscribe [:progress-color])
-                    :transition "fill 1s"}}]))
+    [:path.transition-fill {:d @(rf/subscribe [:clock-progress-path])
+                            :style {:stroke "none"
+                                    :fill @(rf/subscribe [:progress-color])}}]))
 
 (defn clock []
   [:svg {:style {:width "100%"
@@ -417,6 +416,14 @@
      [:img {:src (if space-key? "img/space-key.svg" "img/key.svg")}]
      [:div char]]))
 
+(defn controls-style []
+  (let [hide-controls? @(rf/subscribe [:get :hide-controls?])]
+    {:opacity (if hide-controls?
+                0
+                1)
+     :pointer-events (when hide-controls?
+                       "none")}))
+
 (defn help []
   (let [keys [["?" "Show/hide this help"]
               ["r" "Reset timer to start time"]
@@ -424,33 +431,42 @@
               [" " "Start/pause timer"]
               ["0" "Set start time to 0:00"]]
         show-help? @(rf/subscribe [:get :show-help?])]
-    [:div.help {:style {:transition "opacity 1s"
-                        :opacity (if show-help? 1 0)
-                        :pointer-events (when-not show-help?
-                                          "none")}}
-     [:div.table
-      (for [[key description] keys]
-        ^{:key key}
-        [:div.row
-         [:div.cell.key-cell [key-display key]]
-         [:div.cell.key-description-cell description]])
-      [:div.row
-       [:div.cell.key-cell
-        [key-display "1"]
-        [:div.key [:div "to"]]
-        [key-display "9"]]
-       [:div.cell.key-description-cell "Add <N> minutes"]]
-      [:div.row
-       [:div.cell.last {:style {:padding-top "20px"}}
-        [:a {:href "https://github.com/machtfit/meeting-timer/"
-             :target "_blank"
-             :title "meeting-timer on GitHub"
-             :style {:cursor "pointer"}}
-         [:img {:src "img/github-logo.svg"
-                :style {:width "40px"
-                        :opacity 0.8}}]]]
-       [:div.cell.last {:style {:padding-top "20px"}}
-        "fork and code!"]]]]))
+    [:<>
+     [:div.transition-opacity {:on-click #(rf/dispatch [:toggle-help])
+                               :style (merge
+                                       {:position "absolute"
+                                        :top "20px"
+                                        :left "20px"
+                                        :cursor "pointer"}
+                                       (controls-style))}
+      [key-display "?"]]
+     [:div.help {:style {:transition "opacity 1s"
+                         :opacity (if show-help? 1 0)
+                         :pointer-events (when-not show-help?
+                                           "none")}}
+      [:div.table
+       (for [[key description] keys]
+         ^{:key key}
+         [:div.row
+          [:div.cell.key-cell [key-display key]]
+          [:div.cell.key-description-cell description]])
+       [:div.row
+        [:div.cell.key-cell
+         [key-display "1"]
+         [:div.key [:div "to"]]
+         [key-display "9"]]
+        [:div.cell.key-description-cell "Add <N> minutes"]]
+       [:div.row
+        [:div.cell.last {:style {:padding-top "20px"}}
+         [:a {:href "https://github.com/machtfit/meeting-timer/"
+              :target "_blank"
+              :title "meeting-timer on GitHub"
+              :style {:cursor "pointer"}}
+          [:img {:src "img/github-logo.svg"
+                 :style {:width "40px"
+                         :opacity 0.8}}]]]
+        [:div.cell.last {:style {:padding-top "20px"}}
+         "fork and code!"]]]]]))
 
 (defn key-char [event]
   (.-key event))
@@ -466,25 +482,14 @@
       (s/includes? "123456789" key-char) (rf/dispatch [:add-to-total-duration (* (js/parseInt key-char) 60)]))))
 
 (defn controls []
-  (let [hide-controls? @(rf/subscribe [:get :hide-controls?])
-        controls-style {:transition "opacity 1s"
-                        :opacity (if hide-controls? 0 1)
-                        :pointer-events (when hide-controls? "none")}]
-    [:<>
-     [:div {:style controls-style}
-      [:div {:on-click #(rf/dispatch [:toggle-help])
-             :style {:position "absolute"
-                     :top "20px"
-                     :left "20px"
-                     :cursor "pointer"}}
-       [key-display "?"]]]
-
-     [:div.buttons {:style controls-style}
-      [adder-button "10s" 10]
-      [adder-button "1m" 60]
-      [adder-button "5m" 300]
-      [reset-button]
-      [start-button]]]))
+  [:div.transition-opacity
+   {:style (controls-style)}
+   [:div.buttons
+    [adder-button "10s" 10]
+    [adder-button "1m" 60]
+    [adder-button "5m" 300]
+    [reset-button]
+    [start-button]]])
 
 (defn logo []
   [:div.logo
@@ -492,19 +497,26 @@
         :target "_blank"}
     [:img {:src "img/machtfit-logo.png"}]]])
 
+(defn clock-and-controls []
+  (let [hide-controls? @(rf/subscribe [:get :hide-controls?])
+        controls-width (if hide-controls?
+                         "0px"
+                         "160px")]
+    [:div {:style {:width "100%"}}
+     [:div.transition-width
+      {:style {:width (str "calc(100% - " controls-width ")")}}
+      [clock]]
+     [:div.transition-width
+      {:style {:min-width controls-width
+               :width controls-width}}
+      [controls]]]))
+
 (defn app []
   (set! (.-onkeypress js/window) on-key-press)
   (fn []
     [:div
      {:style {:width "100%"}}
-     [:div {:style {:width "100%"
-                    :display "flex"
-                    :flex-direction "row"}}
-      [:div {:style {:flex "auto"}}
-       [clock]]
-      [:div {:style {:min-width "160px"
-                     :width "160px"}}
-       [controls]]]
+     [clock-and-controls]
      [help]
      [logo]]))
 
