@@ -440,10 +440,10 @@
                                         :cursor "pointer"}
                                        (controls-style))}
       [key-display "?"]]
-     [:div.help {:style {:transition "opacity 1s"
-                         :opacity (if show-help? 1 0)
-                         :pointer-events (when-not show-help?
-                                           "none")}}
+     [:div.help.no-select {:style {:transition "opacity 1s"
+                                   :opacity (if show-help? 1 0)
+                                   :pointer-events (when-not show-help?
+                                                     "none")}}
       [:div.table
        (for [[key description] keys]
          ^{:key key}
