@@ -7,15 +7,15 @@
                 [cljs-node-io "1.1.2"]
                 [binaryage/devtools "1.0.4"]]
 
- :builds {:main {:target           :browser
-                 :modules          {:main {:init-fn machtfit.meeting-timer.main/init
-                                           :entries [machtfit.meeting-timer.main]}}
-                 :output-dir       "main/js/generated"
-                 :asset-path       "js/generated"
-                 :devtools         {:before-load machtfit.meeting-timer.main/stop
-                                    :after-load  machtfit.meeting-timer.main/start
-                                    :http-root   "main"
-                                    :http-port   8081
-                                    :preloads    [devtools.preload
-                                                  day8.re-frame-10x.preload]}
+ :builds {:main {:target :browser
+                 :modules {:main {:init-fn machtfit.meeting-timer.main/init
+                                  :entries [machtfit.meeting-timer.main]}}
+                 :output-dir "main/js/generated"
+                 :asset-path "js/generated"
+                 :devtools {:before-load machtfit.meeting-timer.main/stop
+                            :after-load machtfit.meeting-timer.main/start
+                            :http-root "main"
+                            :http-port 8081
+                            :preloads [devtools.preload
+                                       day8.re-frame-10x.preload]}
                  :compiler-options {:closure-defines {re-frame.trace.trace-enabled? true}}}}}

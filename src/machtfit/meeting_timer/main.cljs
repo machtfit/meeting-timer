@@ -1,7 +1,7 @@
 (ns machtfit.meeting-timer.main
   (:require [clojure.string :as s]
             [goog.string :as gstring]
-            [goog.string.format]  ;; required for release build
+            [goog.string.format] ;; required for release build
             [machtfit.meeting-timer.catmullrom :as cmr]
             [re-frame.core :as rf]
             [reagent.dom :as r-dom]))
@@ -62,12 +62,12 @@
   (fn [remaining-seconds _]
     (when remaining-seconds
       (let [absolute-remaining-seconds (Math/abs remaining-seconds)
-            mins                       (int (/ absolute-remaining-seconds 60))
-            secs                       (int (rem absolute-remaining-seconds 60))
-            left-digits                (gstring/format "%d" mins)
-            left                       (str (when (neg? remaining-seconds) "-")
-                                            left-digits)
-            right                      (gstring/format "%02d" secs)]
+            mins (int (/ absolute-remaining-seconds 60))
+            secs (int (rem absolute-remaining-seconds 60))
+            left-digits (gstring/format "%d" mins)
+            left (str (when (neg? remaining-seconds) "-")
+                      left-digits)
+            right (gstring/format "%02d" secs)]
         [left right]))))
 
 (rf/reg-sub
@@ -94,15 +94,15 @@
      (rf/subscribe [:remaining-time-string-parts])])
 
   (fn [[zero-width colon-width [time-left _]] _]
-    (let [left-width    (* zero-width (count time-left))
-          right-width   (* zero-width 2)
-          middle-width  colon-width
-          total-width   (+ left-width
-                           middle-width
-                           right-width)
+    (let [left-width (* zero-width (count time-left))
+          right-width (* zero-width 2)
+          middle-width colon-width
+          total-width (+ left-width
+                         middle-width
+                         right-width)
           colon-spacing (inc (/ colon-width 2))
-          colon-offset  (+ (- left-width (/ total-width  2))
-                           (/ middle-width 2))]
+          colon-offset (+ (- left-width (/ total-width 2))
+                          (/ middle-width 2))]
       [colon-offset colon-spacing])))
 
 (rf/reg-sub
@@ -125,8 +125,8 @@
   (fn [progress _]
     (condp < progress
       0.98 alarm-red
-      0.9  raspberrysmoothie-pink
-      0.5  sonnengruss-yellow
+      0.9 raspberrysmoothie-pink
+      0.5 sonnengruss-yellow
       machtfit-green)))
                                         ; events
 
@@ -146,9 +146,9 @@
     (js/setTimeout measure-string-widths 0)
     (when-let [profile-timer (:profile-timer db)]
       (js/clearInterval profile-timer))
-    (merge {:duration    (or initial-time 300)
-            :running?    false
-            :zero-width  11
+    (merge {:duration (or initial-time 300)
+            :running? false
+            :zero-width 11
             :colon-width 5}
            db)))
 
@@ -235,10 +235,10 @@
   :tick
   (fn [db _]
     (let [last-tick (:last-tick db)
-          now       (timestamp)
-          diff      (if last-tick
-                      (- now last-tick)
-                      0)]
+          now (timestamp)
+          diff (if last-tick
+                 (- now last-tick)
+                 0)]
       (-> db
           (update :passed-time + diff)
           (assoc :last-tick now)))))
@@ -251,17 +251,17 @@
      (* amplitude (Math/sin (* 0.7 t)))]))
 
 (defn arc-point-wobble [remaining-time angle]
-  (let [angle-rad           (* (- angle 90) (/ Math/PI 180.0))
-        overtime-max        -30
-        clamped-time        (max remaining-time overtime-max)
-        reshape?            (neg? remaining-time)
-        amplitude           (* 10 (/ clamped-time overtime-max) (Math/sin remaining-time))
-        speed               (* 5 (/ clamped-time overtime-max))
-        jerk-amplitude      (* 5 (/ clamped-time overtime-max))
-        jerk-speed          (* 7 (/ clamped-time overtime-max))
-        effective-radius    (if reshape?
-                              (+ radius (* amplitude (Math/sin (+ (* 7 angle-rad) (* speed remaining-time)))))
-                              radius)
+  (let [angle-rad (* (- angle 90) (/ Math/PI 180.0))
+        overtime-max -30
+        clamped-time (max remaining-time overtime-max)
+        reshape? (neg? remaining-time)
+        amplitude (* 10 (/ clamped-time overtime-max) (Math/sin remaining-time))
+        speed (* 5 (/ clamped-time overtime-max))
+        jerk-amplitude (* 5 (/ clamped-time overtime-max))
+        jerk-speed (* 7 (/ clamped-time overtime-max))
+        effective-radius (if reshape?
+                           (+ radius (* amplitude (Math/sin (+ (* 7 angle-rad) (* speed remaining-time)))))
+                           radius)
         [offset-x offset-y] (if reshape?
                               (wobble-position remaining-time jerk-amplitude jerk-speed)
                               [0 0])]
@@ -277,26 +277,26 @@
   (when-let [[time-left time-right] @(rf/subscribe [:remaining-time-string-parts])]
     (let [[colon-offset colon-spacing] @(rf/subscribe [:colon-spacing-data])]
       [:g
-       [:text {:x           (- colon-offset colon-spacing)
-               :y           6
+       [:text {:x (- colon-offset colon-spacing)
+               :y 6
                :text-anchor "end"
-               :style       {:fill      zen-white
-                             :stroke    "none"
-                             :font-size font-size}}
+               :style {:fill zen-white
+                       :stroke "none"
+                       :font-size font-size}}
         time-left]
-       [:text {:x           colon-offset
-               :y           6
+       [:text {:x colon-offset
+               :y 6
                :text-anchor "middle"
-               :style       {:fill      zen-white
-                             :stroke    "none"
-                             :font-size font-size}}
+               :style {:fill zen-white
+                       :stroke "none"
+                       :font-size font-size}}
         ":"]
-       [:text {:x           (+ colon-offset colon-spacing)
-               :y           6
+       [:text {:x (+ colon-offset colon-spacing)
+               :y 6
                :text-anchor "start"
-               :style       {:fill      zen-white
-                             :stroke    "none"
-                             :font-size font-size}}
+               :style {:fill zen-white
+                       :stroke "none"
+                       :font-size font-size}}
         time-right]])))
 
 (rf/reg-sub
@@ -329,8 +329,8 @@
 
 (defn clock-base-shape []
   (when @(rf/subscribe [:show-clock-base-shape?])
-    [:path {:d     @(rf/subscribe [:clock-base-path])
-            :style {:fill   aquafit-blue
+    [:path {:d @(rf/subscribe [:clock-base-path])
+            :style {:fill aquafit-blue
                     :stroke "none"}}]))
 
 (rf/reg-sub
@@ -352,15 +352,15 @@
 
 (defn clock-progress-shape []
   (when @(rf/subscribe [:show-clock-progress-shape?])
-    [:path {:d     @(rf/subscribe [:clock-progress-path])
-            :style {:stroke     "none"
-                    :fill       @(rf/subscribe [:progress-color])
+    [:path {:d @(rf/subscribe [:clock-progress-path])
+            :style {:stroke "none"
+                    :fill @(rf/subscribe [:progress-color])
                     :transition "fill 1s"}}]))
 
 (defn clock []
   [:g.no-select {:transform "translate(50, 50)"
-                 :on-click  #(rf/dispatch [:toggle])
-                 :style     {:cursor "pointer"}}
+                 :on-click #(rf/dispatch [:toggle])
+                 :style {:cursor "pointer"}}
    [clock-base-shape]
    [clock-progress-shape]
    [time-string]])
@@ -369,40 +369,40 @@
   [:div.adder
    [:div.button.minus.no-select
     {:on-click #(rf/dispatch [:add-to-total-duration (- duration)])
-     :title    (str "Minus " text)}
+     :title (str "Minus " text)}
     "-"]
    [:div.button.text.no-select
     {:on-click #(do
                   (rf/dispatch [:set :passed-time 0])
                   (rf/dispatch [:set-duration duration]))
-     :title    (str "Set " text)}
+     :title (str "Set " text)}
     text]
    [:div.button.plus.no-select
     {:on-click #(rf/dispatch [:add-to-total-duration duration])
-     :title    (str "Plus " text)}
+     :title (str "Plus " text)}
     "+"]])
 
 (defn icon [path]
   [:div {:style {:position "relative"
-                 :height   "100%"}}
-   [:img {:src   path
-          :style {:position  "absolute"
-                  :top       "50%"
-                  :left      "50%"
-                  :height    "1em"
+                 :height "100%"}}
+   [:img {:src path
+          :style {:position "absolute"
+                  :top "50%"
+                  :left "50%"
+                  :height "1em"
                   :transform "translate(-50%, -50%)"}}]])
 
 (defn reset-button []
   [:div.button.reset.no-select
    {:on-click #(rf/dispatch [:reset])
-    :title    "Reset"}
+    :title "Reset"}
    (icon "img/refresh-icon.svg")])
 
 (defn start-button []
   (let [running? @(rf/subscribe [:get :running?])]
     [:div.button.start.no-select
      {:on-click #(rf/dispatch [:toggle])
-      :title    (if running? "Pause" "Start")}
+      :title (if running? "Pause" "Start")}
      (if running?
        (icon "img/pause-icon.svg")
        (icon "img/play-icon.svg"))]))
@@ -414,14 +414,14 @@
      [:div char]]))
 
 (defn help []
-  (let [keys       [["?" "Show/hide this help"]
-                    ["r" "Reset timer to start time"]
-                    ["h" "Show/hide controls"]
-                    [" " "Start/pause timer"]
-                    ["0" "Set start time to 0:00"]]
+  (let [keys [["?" "Show/hide this help"]
+              ["r" "Reset timer to start time"]
+              ["h" "Show/hide controls"]
+              [" " "Start/pause timer"]
+              ["0" "Set start time to 0:00"]]
         show-help? @(rf/subscribe [:get :show-help?])]
     [:div.help {:style {:transition "opacity 1s"
-                        :opacity    (if show-help? 1 0)}}
+                        :opacity (if show-help? 1 0)}}
      [:div.table
       (for [[key description] keys]
         ^{:key key}
@@ -436,12 +436,12 @@
        [:div.cell.key-description-cell "Add <N> minutes"]]
       [:div.row
        [:div.cell.last {:style {:padding-top "1em"}}
-        [:a {:href   "https://github.com/machtfit/meeting-timer/"
+        [:a {:href "https://github.com/machtfit/meeting-timer/"
              :target "_blank"
-             :title  "meeting-timer on GitHub"
-             :style  {:cursor "pointer"}}
-         [:img {:src   "img/github-logo.svg"
-                :style {:width   "2.5em"
+             :title "meeting-timer on GitHub"
+             :style {:cursor "pointer"}}
+         [:img {:src "img/github-logo.svg"
+                :style {:width "2.5em"
                         :opacity 0.8}}]]]
        [:div.cell.last {:style {:padding-top "1em"}}
         "fork and code!"]]]]))
@@ -452,26 +452,26 @@
 (defn on-key-press [event]
   (let [key-char (key-char event)]
     (cond
-      (= key-char " ")                   (rf/dispatch [:toggle])
-      (= key-char "r")                   (rf/dispatch [:reset])
-      (= key-char "h")                   (rf/dispatch [:toggle-controls])
-      (= key-char "?")                   (rf/dispatch [:toggle-help])
-      (= key-char "0")                   (rf/dispatch [:set-duration 0])
+      (= key-char " ") (rf/dispatch [:toggle])
+      (= key-char "r") (rf/dispatch [:reset])
+      (= key-char "h") (rf/dispatch [:toggle-controls])
+      (= key-char "?") (rf/dispatch [:toggle-help])
+      (= key-char "0") (rf/dispatch [:set-duration 0])
       (s/includes? "123456789" key-char) (rf/dispatch [:add-to-total-duration (* (js/parseInt key-char) 60)]))))
 
 (defn controls []
   (let [hide-controls? @(rf/subscribe [:get :hide-controls?])
-        controls-style {:transition     "opacity 1s"
-                        :opacity        (if hide-controls? 0 1)
+        controls-style {:transition "opacity 1s"
+                        :opacity (if hide-controls? 0 1)
                         :pointer-events (when hide-controls? "none")}]
     [:<>
      [:div {:style controls-style}
       [:div {:on-click #(rf/dispatch [:toggle-help])
-             :style    {:position "absolute"
-                        :top      "1em"
-                        :left     "1em"
-                        :cursor   "pointer"}}
-         [key-display "?"]]]
+             :style {:position "absolute"
+                     :top "1em"
+                     :left "1em"
+                     :cursor "pointer"}}
+       [key-display "?"]]]
 
      [:div.buttons {:style controls-style}
       [adder-button "10s" 10]
@@ -483,35 +483,35 @@
 (defn app []
   (set! (.-onkeypress js/window) on-key-press)
   (fn []
-      [:div
-       {:style {:width "100%"}}
-       [:svg {:style               {:width  "100%"
-                                    :height "97vh"}
-              :viewBox             "0 0 100 100"
-              :preserveAspectRatio "xMidYMid meet"}
-        [clock]]
-       [:div.logo
-        [:a {:href   "https://www.machtfit.de/"
-             :target "_blank"}
-         [:img {:src "img/machtfit-logo.png"}]]]
-       [controls]
-       [help]]))
+    [:div
+     {:style {:width "100%"}}
+     [:svg {:style {:width "100%"
+                    :height "97vh"}
+            :viewBox "0 0 100 100"
+            :preserveAspectRatio "xMidYMid meet"}
+      [clock]]
+     [:div.logo
+      [:a {:href "https://www.machtfit.de/"
+           :target "_blank"}
+       [:img {:src "img/machtfit-logo.png"}]]]
+     [controls]
+     [help]]))
 
 (defn stop []
   (println "Stopping..."))
 
 (defn parse-time-str [time-str]
   (let [[_ number-str unit] (re-find #"(-?\d+)([ms]?)" (or time-str ""))
-        number              (js/parseInt number-str)]
+        number (js/parseInt number-str)]
     (case unit
-      ""  number
+      "" number
       "s" number
       "m" (* number 60)
       nil)))
 
 (defn start []
-  (let [get-params   (js/URLSearchParams. js/window.location.search)
-        time-str     (.get get-params "t")
+  (let [get-params (js/URLSearchParams. js/window.location.search)
+        time-str (.get get-params "t")
         initial-time (parse-time-str time-str)]
     (rf/dispatch-sync [:initialize-db initial-time]))
   (r-dom/render [app]
