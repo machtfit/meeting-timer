@@ -17,7 +17,7 @@
 (def font-size 25)
 (def ticks-per-second 20)
 
-(def radius 40)
+(def radius 47)
 
 (defn timestamp []
   (/ (.now js/Date) 1000.0))
@@ -358,12 +358,16 @@
                     :transition "fill 1s"}}]))
 
 (defn clock []
-  [:g.no-select {:transform "translate(50, 50)"
-                 :on-click #(rf/dispatch [:toggle])
-                 :style {:cursor "pointer"}}
-   [clock-base-shape]
-   [clock-progress-shape]
-   [time-string]])
+  [:svg {:style {:width "100%"
+                 :height "97vh"}
+         :viewBox "0 0 100 100"
+         :preserveAspectRatio "xMidYMid meet"}
+   [:g.no-select {:transform "translate(50, 50)"
+                  :on-click #(rf/dispatch [:toggle])
+                  :style {:cursor "pointer"}}
+    [clock-base-shape]
+    [clock-progress-shape]
+    [time-string]]])
 
 (defn adder-button [text duration]
   [:div.adder
@@ -389,7 +393,7 @@
           :style {:position "absolute"
                   :top "50%"
                   :left "50%"
-                  :height "1em"
+                  :height "32px"
                   :transform "translate(-50%, -50%)"}}]])
 
 (defn reset-button []
@@ -437,15 +441,15 @@
         [key-display "9"]]
        [:div.cell.key-description-cell "Add <N> minutes"]]
       [:div.row
-       [:div.cell.last {:style {:padding-top "1em"}}
+       [:div.cell.last {:style {:padding-top "20px"}}
         [:a {:href "https://github.com/machtfit/meeting-timer/"
              :target "_blank"
              :title "meeting-timer on GitHub"
              :style {:cursor "pointer"}}
          [:img {:src "img/github-logo.svg"
-                :style {:width "2.5em"
+                :style {:width "40px"
                         :opacity 0.8}}]]]
-       [:div.cell.last {:style {:padding-top "1em"}}
+       [:div.cell.last {:style {:padding-top "20px"}}
         "fork and code!"]]]]))
 
 (defn key-char [event]
@@ -470,8 +474,8 @@
      [:div {:style controls-style}
       [:div {:on-click #(rf/dispatch [:toggle-help])
              :style {:position "absolute"
-                     :top "1em"
-                     :left "1em"
+                     :top "20px"
+                     :left "20px"
                      :cursor "pointer"}}
        [key-display "?"]]]
 
@@ -493,12 +497,14 @@
   (fn []
     [:div
      {:style {:width "100%"}}
-     [:svg {:style {:width "100%"
-                    :height "97vh"}
-            :viewBox "0 0 100 100"
-            :preserveAspectRatio "xMidYMid meet"}
-      [clock]]
-     [controls]
+     [:div {:style {:width "100%"
+                    :display "flex"
+                    :flex-direction "row"}}
+      [:div {:style {:flex "auto"}}
+       [clock]]
+      [:div {:style {:min-width "160px"
+                     :width "160px"}}
+       [controls]]]
      [help]
      [logo]]))
 
