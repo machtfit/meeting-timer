@@ -421,7 +421,9 @@
               ["0" "Set start time to 0:00"]]
         show-help? @(rf/subscribe [:get :show-help?])]
     [:div.help {:style {:transition "opacity 1s"
-                        :opacity (if show-help? 1 0)}}
+                        :opacity (if show-help? 1 0)
+                        :pointer-events (when-not show-help?
+                                          "none")}}
      [:div.table
       (for [[key description] keys]
         ^{:key key}
