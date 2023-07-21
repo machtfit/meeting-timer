@@ -11,8 +11,7 @@
                                   :entries [machtfit.meeting-timer.main]}}
                  :output-dir "main/js/generated"
                  :asset-path "js/generated"
-                 :devtools {:before-load machtfit.meeting-timer.main/stop
-                            :after-load machtfit.meeting-timer.main/start
+                 :devtools {:after-load machtfit.meeting-timer.main/init
                             :http-root "main"
                             :http-port 8081
                             :preloads [devtools.preload
