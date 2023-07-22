@@ -468,11 +468,8 @@
         [:div.cell.last {:style {:padding-top "20px"}}
          "fork and code!"]]]]]))
 
-(defn key-char [event]
-  (.-key event))
-
 (defn on-key-press [event]
-  (let [key-char (key-char event)]
+  (let [key-char (.-key event)]
     (cond
       (= key-char " ") (rf/dispatch [:toggle])
       (= key-char "r") (rf/dispatch [:reset])
