@@ -25,34 +25,25 @@
 (defn timestamp []
   (/ (.now js/Date) 1000.0))
 
-                                        ; subs
-
-(rf/reg-sub
-  :get
+(rf/reg-sub :get
   (fn [db [_ key]]
     (key db)))
 
-(rf/reg-sub
-  :remaining-time
-  (fn [_ _]
-    [(rf/subscribe [:get :duration])
-     (rf/subscribe [:get :passed-time])])
+(rf/reg-sub :remaining-time
+  :<- [:get :duration]
+  :<- [:get :passed-time]
 
   (fn [[duration passed-time] _]
     (- duration passed-time)))
 
-(rf/reg-sub
-  :remaining-seconds
-  (fn [_ _]
-    (rf/subscribe [:remaining-time]))
+(rf/reg-sub :remaining-seconds
+  :<- [:remaining-time]
 
   (fn [remaining-time _]
     (some-> remaining-time Math/ceil)))
 
-(rf/reg-sub
-  :remaining-time-string-parts
-  (fn [_ _]
-    (rf/subscribe [:remaining-seconds]))
+(rf/reg-sub :remaining-time-string-parts
+  :<- [:remaining-seconds]
 
   (fn [remaining-seconds _]
     (when remaining-seconds
@@ -65,26 +56,20 @@
             right (gstring/format "%02d" secs)]
         [left right]))))
 
-(rf/reg-sub
-  :show-clock-base-shape?
-  (fn [_ _]
-    (rf/subscribe [:progress]))
+(rf/reg-sub :show-clock-base-shape?
+  :<- [:progress]
 
   (fn [progress _]
     (< progress 1)))
 
-(rf/reg-sub
-  :show-clock-progress-shape?
-  (fn [_ _]
-    (rf/subscribe [:progress]))
+(rf/reg-sub :show-clock-progress-shape?
+  :<- [:progress]
 
   (fn [progress _]
     (pos? progress)))
 
-(rf/reg-sub
-  :colon-spacing-data
-  (fn [_ _]
-    (rf/subscribe [:remaining-time-string-parts]))
+(rf/reg-sub :colon-spacing-data
+  :<- [:remaining-time-string-parts]
 
   (fn [[time-left _] _]
     (let [left-width (* digit-width (count time-left))
@@ -98,11 +83,9 @@
                           (/ middle-width 2))]
       [colon-offset colon-spacing])))
 
-(rf/reg-sub
-  :progress
-  (fn [_ _]
-    [(rf/subscribe [:get :duration])
-     (rf/subscribe [:get :passed-time])])
+(rf/reg-sub :progress
+  :<- [:get :duration]
+  :<- [:get :passed-time]
 
   (fn [[duration passed-time] _]
     (let [progress-duration (max 0 duration)]
@@ -110,10 +93,8 @@
                  1.0
                  (/ passed-time progress-duration))))))
 
-(rf/reg-sub
-  :progress-color
-  (fn [_ _]
-    (rf/subscribe [:progress]))
+(rf/reg-sub :progress-color
+  :<- [:progress]
 
   (fn [progress _]
     (condp < progress
@@ -121,10 +102,8 @@
       0.9 raspberrysmoothie-pink
       0.5 sonnengruss-yellow
       machtfit-green)))
-                                        ; events
 
-(rf/reg-event-db
-  :initialize-db
+(rf/reg-event-db :initialize-db
   (fn [db [_ initial-time]]
     (when-let [profile-timer (:profile-timer db)]
       (js/clearInterval profile-timer))
@@ -132,8 +111,7 @@
             :running? false}
            db)))
 
-(rf/reg-event-db
-  :set
+(rf/reg-event-db :set
   (fn [db [_ key value]]
     (assoc db key value)))
 
@@ -143,30 +121,26 @@
                        (str duration "s"))]
     (js/history.pushState #js{} nil (str ".?t=" duration-str))))
 
-(rf/reg-event-db
-  :set-duration
+(rf/reg-event-db :set-duration
   (fn [db [_ value]]
     (let [new-db (assoc db :duration value)]
       (change-url (:duration new-db))
       new-db)))
 
-(rf/reg-event-db
-  :add-to-total-duration
+(rf/reg-event-db :add-to-total-duration
   (fn [db [_ value]]
     (let [new-db (update db :duration + value)]
       (change-url (:duration new-db))
       new-db)))
 
-(rf/reg-event-db
-  :toggle-controls
+(rf/reg-event-db :toggle-controls
   (fn [db _]
     (let [new-db (update db :hide-controls? not)]
       (if (:hide-controls? new-db)
         (assoc new-db :show-help? false)
         new-db))))
 
-(rf/reg-event-db
-  :toggle-help
+(rf/reg-event-db :toggle-help
   (fn [db _]
     (update db :show-help? not)))
 
@@ -181,38 +155,33 @@
       (assoc :last-tick (timestamp))
       (assoc :interval-timer (js/setInterval #(rf/dispatch [:tick]) (/ 1000 ticks-per-second)))))
 
-(rf/reg-event-db
-  :resume
+(rf/reg-event-db :resume
   (fn [db _]
     (-> db
         (assoc :running? true)
         (set-interval))))
 
-(rf/reg-event-db
-  :pause
+(rf/reg-event-db :pause
   (fn [db _]
     (-> db
         (assoc :running? false)
         (stop-interval))))
 
-(rf/reg-event-db
-  :toggle
+(rf/reg-event-db :toggle
   (fn [db _]
     (if (:running? db)
       (rf/dispatch [:pause])
       (rf/dispatch [:resume]))
     db))
 
-(rf/reg-event-db
-  :reset
+(rf/reg-event-db :reset
   (fn [db _]
     (-> db
         (assoc :running? false)
         (assoc :passed-time 0)
         (stop-interval))))
 
-(rf/reg-event-db
-  :tick
+(rf/reg-event-db :tick
   (fn [db _]
     (let [last-tick (:last-tick db)
           now (timestamp)
@@ -222,8 +191,6 @@
       (-> db
           (update :passed-time + diff)
           (assoc :last-tick now)))))
-
-                                        ; views
 
 (defn wobble-position [r amplitude speed]
   (let [t (* r speed)]
@@ -279,10 +246,8 @@
                        :font-size font-size}}
         time-right]])))
 
-(rf/reg-sub
-  :clock-base-shape-arc-function
-  (fn [_ _]
-    (rf/subscribe [:remaining-time]))
+(rf/reg-sub :clock-base-shape-arc-function
+  :<- [:remaining-time]
 
   (fn [remaining-time _]
     (let [wobble-time (- remaining-time 5)]
@@ -290,19 +255,15 @@
         (partial arc-point-wobble wobble-time)
         arc-point-default))))
 
-(rf/reg-sub
-  :clock-base-shape
-  (fn [_ _]
-    (rf/subscribe [:clock-base-shape-arc-function]))
+(rf/reg-sub :clock-base-shape
+  :<- [:clock-base-shape-arc-function]
 
   (fn [shape-function _]
     (let [clock-shape-points (mapv shape-function (range 0 361 20))]
       (cmr/catmullrom clock-shape-points :closed? true))))
 
-(rf/reg-sub
-  :clock-base-path
-  (fn [_ _]
-    (rf/subscribe [:clock-base-shape]))
+(rf/reg-sub :clock-base-path
+  :<- [:clock-base-shape]
 
   (fn [clock-base-shape _]
     (cmr/curve->svg-closed-path clock-base-shape)))
@@ -313,19 +274,15 @@
             :style {:fill aquafit-blue
                     :stroke "none"}}]))
 
-(rf/reg-sub
-  :clock-progress-shape
-  (fn [_ _]
-    [(rf/subscribe [:clock-base-shape])
-     (rf/subscribe [:progress])])
+(rf/reg-sub :clock-progress-shape
+  :<- [:clock-base-shape]
+  :<- [:progress]
 
   (fn [[clock-shape progress] _]
     (cmr/partial-curve clock-shape 0 progress)))
 
-(rf/reg-sub
-  :clock-progress-path
-  (fn [_ _]
-    (rf/subscribe [:clock-progress-shape]))
+(rf/reg-sub :clock-progress-path
+  :<- [:clock-progress-shape]
 
   (fn [clock-progress-shape _]
     (s/join " " (map str [(cmr/curve->svg-path clock-progress-shape) "L" 0 0 "Z"]))))
