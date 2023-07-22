@@ -51,7 +51,8 @@
             mins (int (/ absolute-remaining-seconds 60))
             secs (int (rem absolute-remaining-seconds 60))
             left-digits (gstring/format "%d" mins)
-            left (str (when (neg? remaining-seconds) "-")
+            left (str (when (neg? remaining-seconds)
+                        "-")
                       left-digits)
             right (gstring/format "%02d" secs)]
         [left right]))))
@@ -146,7 +147,8 @@
 
 (defn stop-interval [db]
   (let [previous-timer (:interval-timer db)]
-    (when previous-timer (js/clearInterval previous-timer))
+    (when previous-timer
+      (js/clearInterval previous-timer))
     (dissoc db :interval-timer)))
 
 (defn set-interval [db]
@@ -341,15 +343,20 @@
   (let [running? @(rf/subscribe [:get :running?])]
     [:div.button.start.no-select
      {:on-click #(rf/dispatch [:toggle])
-      :title (if running? "Pause" "Start")}
+      :title (if running?
+               "Pause"
+               "Start")}
      (if running?
        (icon "img/pause-icon.svg")
        (icon "img/play-icon.svg"))]))
 
 (defn key-display [char]
   (let [space-key? (= char " ")]
-    [:div.key.no-select {:class (when space-key? "space-key")}
-     [:img {:src (if space-key? "img/space-key.svg" "img/key.svg")}]
+    [:div.key.no-select {:class (when space-key?
+                                  "space-key")}
+     [:img {:src (if space-key?
+                   "img/space-key.svg"
+                   "img/key.svg")}]
      [:div char]]))
 
 (defn controls-style []
@@ -377,7 +384,9 @@
                                        (controls-style))}
       [key-display "?"]]
      [:div.help.no-select {:style {:transition "opacity 1s"
-                                   :opacity (if show-help? 1 0)
+                                   :opacity (if show-help?
+                                              1
+                                              0)
                                    :pointer-events (when-not show-help?
                                                      "none")}}
       [:div.table
