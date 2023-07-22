@@ -15,7 +15,7 @@
 (defonce alarm-red "#d22")
 
 (def font-size 25)
-(def ticks-per-second 20)
+(def ticks-per-second 10)
 
 (def colon-width 5)
 (def digit-width 11)
