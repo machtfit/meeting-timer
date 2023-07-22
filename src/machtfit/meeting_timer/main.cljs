@@ -4,6 +4,7 @@
             [goog.string.format] ;; required for release build
             [machtfit.meeting-timer.catmullrom :as cmr]
             [re-frame.core :as rf]
+            [re-frame.subs :as r-subs]
             [reagent.dom.client :as r]))
 
 (defonce aquafit-blue "#008ca0")
@@ -472,6 +473,7 @@
       nil)))
 
 (defn ^:export init []
+  (r-subs/clear-subscription-cache!)
   (let [get-params (js/URLSearchParams. js/window.location.search)
         time-str (.get get-params "t")
         initial-time (parse-time-str time-str)]
