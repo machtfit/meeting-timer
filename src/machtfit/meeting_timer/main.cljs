@@ -167,12 +167,11 @@
         (assoc :running? false)
         (stop-interval))))
 
-(rf/reg-event-db :toggle
-  (fn [db _]
-    (if (:running? db)
-      (rf/dispatch [:pause])
-      (rf/dispatch [:resume]))
-    db))
+(rf/reg-event-fx :toggle
+  (fn [{:keys [db]} _]
+    {:dispatch (if (:running? db)
+                 [:pause]
+                 [:resume])}))
 
 (rf/reg-event-db :reset
   (fn [db _]
