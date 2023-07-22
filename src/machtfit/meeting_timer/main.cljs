@@ -17,6 +17,9 @@
 (def font-size 25)
 (def ticks-per-second 20)
 
+(def colon-width 5)
+(def digit-width 11)
+
 (def radius 47)
 
 (defn timestamp []
@@ -28,14 +31,6 @@
   :get
   (fn [db [_ key]]
     (key db)))
-
-(rf/reg-sub
-  :colon-width
-  (fn [_ _]
-    (rf/subscribe [:get :colon-width]))
-
-  (fn [colon-width _]
-    colon-width))
 
 (rf/reg-sub
   :remaining-time
@@ -89,13 +84,11 @@
 (rf/reg-sub
   :colon-spacing-data
   (fn [_ _]
-    [(rf/subscribe [:get :zero-width])
-     (rf/subscribe [:get :colon-width])
-     (rf/subscribe [:remaining-time-string-parts])])
+    (rf/subscribe [:remaining-time-string-parts]))
 
-  (fn [[zero-width colon-width [time-left _]] _]
-    (let [left-width (* zero-width (count time-left))
-          right-width (* zero-width 2)
+  (fn [[time-left _] _]
+    (let [left-width (* digit-width (count time-left))
+          right-width (* digit-width 2)
           middle-width colon-width
           total-width (+ left-width
                          middle-width
@@ -130,26 +123,13 @@
       machtfit-green)))
                                         ; events
 
-(defn get-string-width [text font-size]
-  (let [element (js/document.getElementById "text-test")]
-    (set! (.. element -style -fontSize) font-size)
-    (set! (.. element -innerHTML) text)
-    (inc (.. element -clientWidth))))
-
-(defn measure-string-widths []
-  (rf/dispatch [:set :zero-width (get-string-width "0" font-size)])
-  (rf/dispatch [:set :colon-width (get-string-width ":" font-size)]))
-
 (rf/reg-event-db
   :initialize-db
   (fn [db [_ initial-time]]
-    (js/setTimeout measure-string-widths 0)
     (when-let [profile-timer (:profile-timer db)]
       (js/clearInterval profile-timer))
     (merge {:duration (or initial-time 300)
-            :running? false
-            :zero-width 11
-            :colon-width 5}
+            :running? false}
            db)))
 
 (rf/reg-event-db
