@@ -2,7 +2,6 @@
   (:require [clojure.string :as s]
             [goog.string :as gstring]
             [goog.string.format] ;; required for release build
-            [machtfit.meeting-timer.catmullrom :as cmr]
             [re-frame.core :as rf]
             [re-frame.subs :as r-subs]
             [reagent.dom.client :as r]))
@@ -194,34 +193,6 @@
           (update :passed-time + diff)
           (assoc :last-tick now)))))
 
-(defn wobble-position [r amplitude speed]
-  (let [t (* r speed)]
-    [(* amplitude (Math/cos (* 0.8 t)))
-     (* amplitude (Math/sin (* 0.7 t)))]))
-
-(defn arc-point-wobble [remaining-time angle]
-  (let [angle-rad (* (- angle 90) (/ Math/PI 180.0))
-        overtime-max -30
-        clamped-time (max remaining-time overtime-max)
-        reshape? (neg? remaining-time)
-        amplitude (* 10 (/ clamped-time overtime-max) (Math/sin remaining-time))
-        speed (* 5 (/ clamped-time overtime-max))
-        jerk-amplitude (* 5 (/ clamped-time overtime-max))
-        jerk-speed (* 7 (/ clamped-time overtime-max))
-        effective-radius (if reshape?
-                           (+ radius (* amplitude (Math/sin (+ (* 7 angle-rad) (* speed remaining-time)))))
-                           radius)
-        [offset-x offset-y] (if reshape?
-                              (wobble-position remaining-time jerk-amplitude jerk-speed)
-                              [0 0])]
-    {:x (+ (* effective-radius (Math/cos angle-rad)) offset-x)
-     :y (+ (* effective-radius (Math/sin angle-rad)) offset-y)}))
-
-(defn arc-point-default [angle]
-  (let [angle-rad (* (- angle 90) (/ Math/PI 180.0))]
-    {:x (* radius (Math/cos angle-rad))
-     :y (* radius (Math/sin angle-rad))}))
-
 (defn time-string []
   (when-let [[time-left time-right] @(rf/subscribe [:remaining-time-string-parts])]
     (let [[colon-offset colon-spacing] @(rf/subscribe [:colon-spacing-data])]
@@ -248,27 +219,12 @@
                        :font-size font-size}}
         time-right]])))
 
-(rf/reg-sub :clock-base-shape-arc-function
-  :<- [:remaining-time]
-
-  (fn [remaining-time _]
-    (let [wobble-time (- remaining-time 5)]
-      (if (neg? wobble-time)
-        (partial arc-point-wobble wobble-time)
-        arc-point-default))))
-
-(rf/reg-sub :clock-base-shape
-  :<- [:clock-base-shape-arc-function]
-
-  (fn [shape-function _]
-    (let [clock-shape-points (mapv shape-function (range 0 361 20))]
-      (cmr/catmullrom clock-shape-points :closed? true))))
-
 (rf/reg-sub :clock-base-path
-  :<- [:clock-base-shape]
-
-  (fn [clock-base-shape _]
-    (cmr/curve->svg-closed-path clock-base-shape)))
+  (fn [_ _]
+    (s/join " " (map str ["M" 0 (- radius)
+                          "A" radius radius 0 0 1 0 radius
+                          "A" radius radius 0 0 1 0 (- radius)
+                          "Z"]))))
 
 (defn clock-base-shape []
   (when @(rf/subscribe [:show-clock-base-shape?])
@@ -276,18 +232,23 @@
             :style {:fill aquafit-blue
                     :stroke "none"}}]))
 
-(rf/reg-sub :clock-progress-shape
-  :<- [:clock-base-shape]
-  :<- [:progress]
-
-  (fn [[clock-shape progress] _]
-    (cmr/partial-curve clock-shape 0 progress)))
-
 (rf/reg-sub :clock-progress-path
-  :<- [:clock-progress-shape]
+  :<- [:progress]
+  :<- [:clock-base-path]
 
-  (fn [clock-progress-shape _]
-    (s/join " " (map str [(cmr/curve->svg-path clock-progress-shape) "L" 0 0 "Z"]))))
+  (fn [[progress clock-base-path] _]
+    (if (<= 1 progress)
+      clock-base-path
+      (let [progress-angle (* progress 2 Math/PI)
+            progress-point-x (* radius (Math/sin progress-angle))
+            progress-point-y (* radius (- (Math/cos progress-angle)))
+            large-arc-flag (if (< 0.5 progress)
+                             1
+                             0)]
+        (s/join " " (map str ["M" 0 (- radius)
+                              "A" radius radius 0 large-arc-flag 1 progress-point-x progress-point-y
+                              "L" 0 0
+                              "Z"]))))))
 
 (defn clock-progress-shape []
   (when @(rf/subscribe [:show-clock-progress-shape?])
