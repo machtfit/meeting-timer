@@ -219,42 +219,44 @@
                        :font-size font-size}}
         time-right]])))
 
-(rf/reg-sub :clock-base-path
-  (fn [_ _]
-    (s/join " " (map str ["M" 0 (- radius)
-                          "A" radius radius 0 0 1 0 radius
-                          "A" radius radius 0 0 1 0 (- radius)
-                          "Z"]))))
-
 (defn clock-base-shape []
   (when @(rf/subscribe [:show-clock-base-shape?])
-    [:path {:d @(rf/subscribe [:clock-base-path])
+    [:path {:d (s/join " " (map str ["M" 0 (- radius)
+                                     "A" radius radius 0 0 1 0 radius
+                                     "A" radius radius 0 0 1 0 (- radius)
+                                     "Z"]))
             :style {:fill aquafit-blue
                     :stroke "none"}}]))
 
-(rf/reg-sub :clock-progress-path
+(rf/reg-sub :clock-progress-shape
   :<- [:progress]
-  :<- [:clock-base-path]
+  :<- [:progress-color]
 
-  (fn [[progress clock-base-path] _]
+  (fn [[progress progress-color] _]
     (if (<= 1 progress)
-      clock-base-path
+      (let [scale (/ radius 50)]
+        [:path.transition-fill.wobble
+         {:transform (str "scale(" scale "," scale ")"
+                          "translate(-50, -50)")
+          :style {:stroke "none"
+                  :fill progress-color}}])
       (let [progress-angle (* progress 2 Math/PI)
             progress-point-x (* radius (Math/sin progress-angle))
             progress-point-y (* radius (- (Math/cos progress-angle)))
             large-arc-flag (if (< 0.5 progress)
                              1
                              0)]
-        (s/join " " (map str ["M" 0 (- radius)
-                              "A" radius radius 0 large-arc-flag 1 progress-point-x progress-point-y
-                              "L" 0 0
-                              "Z"]))))))
+        [:path.transition-fill
+         {:d (s/join " " (map str ["M" 0 (- radius)
+                                   "A" radius radius 0 large-arc-flag 1 progress-point-x progress-point-y
+                                   "L" 0 0
+                                   "Z"]))
+          :style {:stroke "none"
+                  :fill progress-color}}]))))
 
 (defn clock-progress-shape []
   (when @(rf/subscribe [:show-clock-progress-shape?])
-    [:path.transition-fill {:d @(rf/subscribe [:clock-progress-path])
-                            :style {:stroke "none"
-                                    :fill @(rf/subscribe [:progress-color])}}]))
+    @(rf/subscribe [:clock-progress-shape])))
 
 (defn clock []
   [:svg {:style {:width "100%"
