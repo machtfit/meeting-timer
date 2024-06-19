@@ -94,6 +94,10 @@
                  1.0
                  (/ passed-time progress-duration))))))
 
+(rf/reg-sub :on-safari?
+  (fn [_]
+    (s/includes? js/navigator.userAgent "Safari")))
+
 (rf/reg-sub :progress-color
   :<- [:progress]
 
@@ -235,11 +239,19 @@
   (fn [[progress progress-color] _]
     (if (<= 1 progress)
       (let [scale (/ radius 50)]
-        [:path.transition-fill.wobble
-         {:transform (str "scale(" scale "," scale ")"
-                          "translate(-50, -50)")
-          :style {:stroke "none"
-                  :fill progress-color}}])
+        (if @(rf/subscribe [:on-safari?])
+          [:path.transition-fill
+           {:d (s/join " " (map str ["M" 0 (- radius)
+                                     "A" radius radius 0 0 1 0 radius
+                                     "A" radius radius 0 0 1 0 (- radius)
+                                     "Z"]))
+            :style {:fill alarm-red
+                    :stroke "none"}}]
+          [:path.transition-fill.wobble
+           {:transform (str "scale(" scale "," scale ")"
+                            "translate(-50, -50)")
+            :style {:stroke "none"
+                    :fill progress-color}}]))
       (let [progress-angle (* progress 2 Math/PI)
             progress-point-x (* radius (Math/sin progress-angle))
             progress-point-y (* radius (- (Math/cos progress-angle)))
