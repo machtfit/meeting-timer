@@ -1,222 +1,233 @@
 @font-face {
-  font-family: "Cera";
-  font-style: normal;
-  font-weight: normal;
-  src: url("../font/cera.otf") format("opentype");
+    font-family: "Superior";
+    font-style: normal;
+    font-weight: normal;
+    src: url("../font/superior.ttf") format("truetype");
 }
 
 body {
-  background-color: #fff;
-  color: #122020;
-  font-family: "Cera", sans-serif;
-  overflow: hidden;
+    background-color: #fff;
+    color: #122020;
+    font-family: "Superior", sans-serif;
+    overflow: hidden;
 }
 
 .buttons {
-  display: block;
-  position: absolute;
-  right: 16px;
-  top: 16px;
+    display: block;
+    position: absolute;
+    right: 16px;
+    top: 16px;
 }
 
 .buttons > div {
-  margin-bottom: 10px;
+    margin-bottom: 10px;
 }
 
 .no-select {
-  -webkit-touch-callout: none; /* iOS Safari */
-  -webkit-user-select: none; /* Safari */
-  -khtml-user-select: none; /* Konqueror HTML */
-  -moz-user-select: none; /* Old versions of Firefox */
-  -ms-user-select: none; /* Internet Explorer/Edge */
-  user-select: none; /* Non-prefixed version, currently
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Old versions of Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome, Opera and Firefox */
 }
 
 .button {
-  display: inline-block;
-  text-align: center;
-  transition: background-color 0.6s;
-  cursor: pointer;
-  font-size: 32px;
-  color: #ffffff;
-  background-color: #00bd91;
-  height: 50px;
+    display: inline-block;
+    text-align: center;
+    transition: background-color 0.6s;
+    cursor: pointer;
+    font-size: 32px;
+    color: #ffffff;
+    background-color: #00bd91;
+    height: 50px;
 }
 
 .button:hover {
-  background-color: #009871;
+    background-color: #009871;
 }
 
 .adder div {
-  transition: background-color 0.6s;
-  line-height: 50px;
+    transition: background-color 0.6s;
+    line-height: 50px;
 }
 
 .adder .minus {
-  width: 32px;
-  padding-left: 6px;
-  border-radius: 25px 0 0 25px;
+    width: 32px;
+    padding-left: 6px;
+    border-radius: 25px 0 0 25px;
 }
 
 .adder .text {
-  width: 74px;
+    width: 74px;
 }
 
 .adder .plus {
-  width: 32px;
-  padding-right: 6px;
-  border-radius: 0 25px 25px 0;
+    width: 32px;
+    padding-right: 6px;
+    border-radius: 0 25px 25px 0;
 }
 
 .reset,
 .start {
-  display: block;
-  width: 150px;
-  border-radius: 25px;
+    display: block;
+    width: 150px;
+    border-radius: 25px;
 }
 
 #text-test {
-  position: absolute;
-  visibility: hidden;
-  height: auto;
-  width: auto;
-  white-space: nowrap;
+    position: absolute;
+    visibility: hidden;
+    height: auto;
+    width: auto;
+    white-space: nowrap;
 }
 
 .logo {
-  position: absolute;
-  right: 16px;
-  bottom: 16px;
-  width: 150px;
-  color: #888;
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    width: 150px;
+    color: #888;
 }
 
 .logo img {
-  width: 100%;
+    width: 100%;
 }
 
 a,
 a:hover,
 a:focus,
 a:active {
-  text-decoration: none;
-  color: inherit;
+    text-decoration: none;
+    color: inherit;
 }
 
 .help {
-  position: fixed;
-  top: 48px;
-  left: 48px;
-  z-index: 1;
-  background-color: #ddd;
-  border-radius: 16px;
-  padding: 32px;
+    position: fixed;
+    top: 48px;
+    left: 48px;
+    z-index: 1;
+    background-color: #ddd;
+    border-radius: 16px;
+    padding: 32px;
 }
 
 .key {
-  position: relative;
-  width: 32px;
-  height: 32px;
-  display: inline-block;
-  color: #444;
+    position: relative;
+    width: 32px;
+    height: 32px;
+    display: inline-block;
+    color: #444;
 }
 
 .key img {
-  position: absolute;
-  height: 32px;
+    position: absolute;
+    height: 32px;
 }
 
 .space-key {
-  width: 64x;
+    width: 64x;
 }
 
 .key div {
-  position: absolute;
-  font-size: 20px;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+    position: absolute;
+    font-size: 20px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .table {
-  display: table;
-  width: 100%;
+    display: table;
+    width: 100%;
 }
 
 .row {
-  display: table-row;
-  color: #444;
+    display: table-row;
+    color: #444;
 }
 
 .cell {
-  display: table-cell;
-  padding-bottom: 8px;
-  vertical-align: middle;
+    display: table-cell;
+    padding-bottom: 8px;
+    vertical-align: middle;
 }
 
 .cell.last {
-  padding-bottom: 0;
+    padding-bottom: 0;
 }
 
 .key-cell {
-  padding-right: 48px;
+    padding-right: 48px;
 }
 
-
 .transition-fill {
-  -webkit-transition: fill 1s;
-  -moz-transition: fill 1s;
-  -ms-transition: fill 1s;
-  -o-transition: fill 1s;
-  transition: fill 1s;
+    -webkit-transition: fill 1s;
+    -moz-transition: fill 1s;
+    -ms-transition: fill 1s;
+    -o-transition: fill 1s;
+    transition: fill 1s;
 }
 
 .transition-opacity {
-  -webkit-transition: opacity 1s;
-  -moz-transition: opacity 1s;
-  -ms-transition: opacity 1s;
-  -o-transition: opacity 1s;
-  transition: opacity 1s;
+    -webkit-transition: opacity 1s;
+    -moz-transition: opacity 1s;
+    -ms-transition: opacity 1s;
+    -o-transition: opacity 1s;
+    transition: opacity 1s;
 }
 
 .transition-width {
-  -webkit-transition: width 1s;
-  -moz-transition: width 1s;
-  -ms-transition: width 1s;
-  -o-transition: width 1s;
-  transition: width 1s;
+    -webkit-transition: width 1s;
+    -moz-transition: width 1s;
+    -ms-transition: width 1s;
+    -o-transition: width 1s;
+    transition: width 1s;
 }
 
 .wobble {
-  animation-name: wobble;
-  animation-duration: 5s;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
+    animation-name: wobble;
+    animation-duration: 5s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
 }
 
 @keyframes wobble {
-  0% {
-     d: path('M100,50 C100,77.614 77.614,100 50,100 C22.386,100 0,77.614 0,50 C0,22.386 22.386,0 50,0 C77.614,0 100,22.386 100,50 Z');
-  }
+    0% {
+        d: path(
+            "M100,50 C100,77.614 77.614,100 50,100 C22.386,100 0,77.614 0,50 C0,22.386 22.386,0 50,0 C77.614,0 100,22.386 100,50 Z"
+        );
+    }
 
-  20% {
-     d: path('M 100,50 C 84.259058,91.758647 79.628677,83.548736 50,100 25.857661,113.40498 -9.0649824,70.563695 0,50 11.138773,24.73196 23.878457,-8.9560637 50,0 82.314597,11.079422 110.4792,22.200056 100,50 Z');
-  }
+    20% {
+        d: path(
+            "M 100,50 C 84.259058,91.758647 79.628677,83.548736 50,100 25.857661,113.40498 -9.0649824,70.563695 0,50 11.138773,24.73196 23.878457,-8.9560637 50,0 82.314597,11.079422 110.4792,22.200056 100,50 Z"
+        );
+    }
 
-  40% {
-     d: path('M 100,50 C 99.346719,94.622136 83.743718,96.859285 50,100 17.799899,102.99704 2.8184496,72.295645 0,50 -4.9767516,10.630876 22.199756,17.231663 50,0 79.035785,-17.9975 100.407,22.200056 100,50 Z');
-  }
+    40% {
+        d: path(
+            "M 100,50 C 99.346719,94.622136 83.743718,96.859285 50,100 17.799899,102.99704 2.8184496,72.295645 0,50 -4.9767516,10.630876 22.199756,17.231663 50,0 79.035785,-17.9975 100.407,22.200056 100,50 Z"
+        );
+    }
 
-  60% {
-     d: path('M 100,50 C 114.94227,92.051046 58.898951,94.844845 50,100 22.017009,116.21052 -24.712238,75.653046 0,50 27.530771,21.421116 4.7412717,4.1377998 50,0 84.019307,-3.1102308 95.370898,36.97262 100,50 Z');
-  }
+    60% {
+        d: path(
+            "M 100,50 C 114.94227,92.051046 58.898951,94.844845 50,100 22.017009,116.21052 -24.712238,75.653046 0,50 27.530771,21.421116 4.7412717,4.1377998 50,0 84.019307,-3.1102308 95.370898,36.97262 100,50 Z"
+        );
+    }
 
-  80% {
-     d: path('M 100,50 C 89.691365,93.419971 69.319358,105.74741 50,100 36.065871,95.854667 -2.1471801,85.555071 0,50 0.67156379,38.8796 5.2743169,-8.0676608 50,0 83.012087,5.9547516 103.09292,36.97262 100,50 Z');
-  }
+    80% {
+        d: path(
+            "M 100,50 C 89.691365,93.419971 69.319358,105.74741 50,100 36.065871,95.854667 -2.1471801,85.555071 0,50 0.67156379,38.8796 5.2743169,-8.0676608 50,0 83.012087,5.9547516 103.09292,36.97262 100,50 Z"
+        );
+    }
 
-  100% {
-     d: path('M100,50 C100,77.614 77.614,100 50,100 C22.386,100 0,77.614 0,50 C0,22.386 22.386,0 50,0 C77.614,0 100,22.386 100,50 Z');
-  }
+    100% {
+        d: path(
+            "M100,50 C100,77.614 77.614,100 50,100 C22.386,100 0,77.614 0,50 C0,22.386 22.386,0 50,0 C77.614,0 100,22.386 100,50 Z"
+        );
+    }
 }
